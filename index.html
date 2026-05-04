@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MatrixSec — Kiberxavfsizlik </title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --matrix-green: #00ff41;
+    --matrix-dark-green: #008f11;
+    --matrix-dim: #003b00;
+    --red-accent: #ff2a2a;
+    --bg: #000000;
+    --surface: #050f05;
+    --surface2: #0a1a0a;
+    --text: #c8ffc8;
+    --text-dim: #4a7a4a;
+    --white: #e8ffe8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    width: 12px; height: 12px;
+    background: var(--matrix-green);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 0 10px var(--matrix-green), 0 0 30px var(--matrix-green);
+    transition: transform 0.1s ease;
+  }
+  .cursor-trail {
+    width: 30px; height: 30px;
+    border: 1px solid var(--matrix-green);
+    border-radius: 50%;
+    position: fixed;
+    top: 0; left: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.4;
+    transition: all 0.15s ease;
+  }
+
+  /* MATRIX RAIN CANVAS */
+  #matrixCanvas {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    opacity: 0.15;
+  }
+
+  /* NAVIGATION */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 60px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, transparent 100%);
+    border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+  }
+
+  .logo-icon {
+    width: 40px; height: 40px;
+    border: 2px solid var(--matrix-green);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 18px;
+    color: var(--matrix-green);
+    position: relative;
+    animation: logoPulse 3s ease-in-out infinite;
+  }
+
+  .logo-icon::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border: 1px solid rgba(0,255,65,0.3);
+    animation: logoRotate 6s linear infinite;
+  }
+
+  @keyframes logoPulse { 0%,100%{box-shadow:0 0 10px var(--matrix-green)} 50%{box-shadow:0 0 30px var(--matrix-green),0 0 60px rgba(0,255,65,0.3)} }
+  @keyframes logoRotate { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+
+  .logo-text {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    font-weight: 900;
+    color: var(--matrix-green);
+    letter-spacing: 3px;
+    text-shadow: 0 0 20px var(--matrix-green);
+  }
+
+  .logo-text span { color: var(--red-accent); }
+
+  nav ul {
+    display: flex;
+    gap: 40px;
+    list-style: none;
+  }
+
+  nav ul li a {
+    text-decoration: none;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  nav ul li a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 1px;
+    background: var(--matrix-green);
+    transform: scaleX(0);
+    transition: transform 0.3s;
+  }
+
+  nav ul li a:hover { color: var(--matrix-green); text-shadow: 0 0 10px var(--matrix-green); }
+  nav ul li a:hover::after { transform: scaleX(1); }
+
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--matrix-green);
+    color: var(--matrix-green) !important;
+    padding: 10px 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .nav-cta::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: var(--matrix-green);
+    transition: left 0.3s ease;
+    z-index: -1;
+  }
+
+  .nav-cta:hover { color: var(--bg) !important; text-shadow: none !important; }
+  .nav-cta:hover::before { left: 0; }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+    padding: 100px 60px 60px;
+    text-align: center;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(0,255,65,0.3);
+    background: rgba(0,255,65,0.05);
+    padding: 6px 16px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--matrix-green);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+    animation: fadeSlideDown 0.8s ease forwards;
+    opacity: 0;
+  }
+
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--matrix-green);
+    border-radius: 50%;
+    animation: blink 1.5s ease-in-out infinite;
+  }
+
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  .hero h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(42px, 7vw, 90px);
+    font-weight: 900;
+    line-height: 1.0;
+    margin-bottom: 30px;
+    animation: fadeSlideDown 0.8s 0.2s ease forwards;
+    opacity: 0;
+  }
+
+  .hero h1 .line1 { color: var(--white); display: block; }
+  .hero h1 .line2 { color: var(--white); display: block; }
+  .hero h1 .accent {
+    color: var(--matrix-green);
+    text-shadow: 0 0 40px var(--matrix-green), 0 0 80px rgba(0,255,65,0.4);
+    display: block;
+  }
+
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 600px;
+    line-height: 1.8;
+    margin-bottom: 50px;
+    font-weight: 300;
+    letter-spacing: 1px;
+    animation: fadeSlideDown 0.8s 0.4s ease forwards;
+    opacity: 0;
+  }
+
+  .hero-sub strong { color: var(--matrix-green); font-weight: 600; }
+
+  .hero-btns {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+    animation: fadeSlideDown 0.8s 0.6s ease forwards;
+    opacity: 0;
+  }
+
+  .btn-primary {
+    background: var(--matrix-green);
+    color: var(--bg);
+    border: none;
+    padding: 16px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: none;
+    text-decoration: none;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%; width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+    transition: left 0.5s;
+  }
+
+  .btn-primary:hover { box-shadow: 0 0 30px var(--matrix-green); transform: translateY(-2px); }
+  .btn-primary:hover::before { left: 100%; }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid rgba(0,255,65,0.3);
+    padding: 16px 40px;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: none;
+    text-decoration: none;
+    transition: all 0.3s;
+    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  }
+
+  .btn-secondary:hover { border-color: var(--matrix-green); color: var(--matrix-green); box-shadow: 0 0 20px rgba(0,255,65,0.2); }
+
+  @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
+
+  /* STATS */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 700px;
+    width: 100%;
+    margin: 60px auto 0;
+    border: 1px solid rgba(0,255,65,0.15);
+    background: rgba(0,20,0,0.6);
+    backdrop-filter: blur(10px);
+    animation: fadeSlideDown 0.8s 0.8s ease forwards;
+    opacity: 0;
+    position: relative;
+  }
+
+  .stats::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
+  }
+
+  .stat {
+    padding: 28px 20px;
+    text-align: center;
+    border-right: 1px solid rgba(0,255,65,0.1);
+  }
+
+  .stat:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Orbitron', monospace;
+    font-size: 36px;
+    font-weight: 900;
+    color: var(--matrix-green);
+    text-shadow: 0 0 20px var(--matrix-green);
+    display: block;
+    line-height: 1;
+  }
+
+  .stat-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-top: 6px;
+    display: block;
+  }
+
+  /* SECTIONS */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 100px 60px;
+  }
+
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--matrix-green);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .section-label::before { content: '// '; opacity: 0.5; }
+
+  .section-title {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 4vw, 48px);
+    font-weight: 900;
+    color: var(--white);
+    margin-bottom: 20px;
+    line-height: 1.1;
+  }
+
+  .section-title .g { color: var(--matrix-green); }
+
+  .section-desc {
+    color: var(--text-dim);
+    font-size: 17px;
+    line-height: 1.8;
+    max-width: 600px;
+    margin-bottom: 60px;
+  }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2px;
+    background: rgba(0,255,65,0.05);
+  }
+
+  .feature-card {
+    background: var(--surface);
+    padding: 40px;
+    border: 1px solid rgba(0,255,65,0.08);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s;
+    cursor: none;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
+    transform: scaleX(0);
+    transition: transform 0.4s;
+  }
+
+  .feature-card:hover { background: var(--surface2); border-color: rgba(0,255,65,0.3); transform: translateY(-4px); }
+  .feature-card:hover::before { transform: scaleX(1); }
+
+  .feature-icon {
+    width: 56px; height: 56px;
+    border: 1px solid rgba(0,255,65,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    color: var(--matrix-green);
+    transition: all 0.4s;
+  }
+
+  .feature-card:hover .feature-icon {
+    border-color: var(--matrix-green);
+    box-shadow: 0 0 20px rgba(0,255,65,0.3);
+  }
+
+  .feature-card h3 {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  .feature-card p {
+    color: var(--text-dim);
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .feature-card .feature-tag {
+    display: inline-block;
+    margin-top: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--matrix-green);
+    border: 1px solid rgba(0,255,65,0.2);
+    padding: 4px 10px;
+    text-transform: uppercase;
+  }
+
+  /* HOW IT WORKS */
+  .how-section { background: rgba(0,10,0,0.4); }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0;
+    position: relative;
+  }
+
+  .steps::before {
+    content: '';
+    position: absolute;
+    top: 40px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 5%, rgba(0,255,65,0.3) 20%, rgba(0,255,65,0.3) 80%, transparent 95%);
+  }
+
+  .step {
+    padding: 0 30px 40px;
+    text-align: center;
+    position: relative;
+  }
+
+  .step-num {
+    width: 80px; height: 80px;
+    border: 2px solid var(--matrix-green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Orbitron', monospace;
+    font-size: 22px;
+    font-weight: 900;
+    color: var(--matrix-green);
+    text-shadow: 0 0 20px var(--matrix-green);
+    background: var(--bg);
+    margin: 0 auto 30px;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 30px rgba(0,255,65,0.2);
+  }
+
+  .step h4 {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--white);
+    margin-bottom: 12px;
+    letter-spacing: 1px;
+  }
+
+  .step p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
+
+  /* PRICING */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    max-width: 900px;
+  }
+
+  .price-card {
+    background: var(--surface);
+    border: 1px solid rgba(0,255,65,0.1);
+    padding: 40px;
+    position: relative;
+    transition: all 0.4s;
+  }
+
+  .price-card.featured {
+    border-color: var(--matrix-green);
+    background: rgba(0,20,0,0.8);
+  }
+
+  .price-card.featured::before {
+    content: 'TAVSIYA ETILADI';
+    position: absolute;
+    top: -1px; left: 50%; transform: translateX(-50%);
+    background: var(--matrix-green);
+    color: var(--bg);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    padding: 4px 16px;
+    white-space: nowrap;
+  }
+
+  .price-card:not(.featured):hover { border-color: rgba(0,255,65,0.4); transform: translateY(-4px); }
+  .price-card.featured:hover { transform: translateY(-4px); box-shadow: 0 0 40px rgba(0,255,65,0.2); }
+
+  .price-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .price-amount {
+    font-family: 'Orbitron', monospace;
+    font-size: 48px;
+    font-weight: 900;
+    color: var(--matrix-green);
+    text-shadow: 0 0 20px var(--matrix-green);
+    line-height: 1;
+  }
+
+  .price-amount span { font-size: 18px; color: var(--text-dim); }
+
+  .price-period {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin: 8px 0 30px;
+    font-family: 'Share Tech Mono', monospace;
+  }
+
+  .price-features { list-style: none; margin-bottom: 30px; }
+
+  .price-features li {
+    padding: 8px 0;
+    font-size: 14px;
+    color: var(--text-dim);
+    border-bottom: 1px solid rgba(0,255,65,0.05);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .price-features li::before {
+    content: '▸';
+    color: var(--matrix-green);
+    font-size: 10px;
+    flex-shrink: 0;
+  }
+
+  .btn-plan {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    padding: 14px;
+    font-family: 'Orbitron', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: none;
+    transition: all 0.3s;
+    border: 1px solid rgba(0,255,65,0.4);
+    color: var(--matrix-green);
+    background: transparent;
+  }
+
+  .btn-plan:hover, .price-card.featured .btn-plan {
+    background: var(--matrix-green);
+    color: var(--bg);
+    border-color: var(--matrix-green);
+    box-shadow: 0 0 20px rgba(0,255,65,0.4);
+  }
+
+  /* TERMINAL SECTION */
+  .terminal-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .terminal-window {
+    background: rgba(0,10,0,0.95);
+    border: 1px solid rgba(0,255,65,0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(0,255,65,0.1), inset 0 0 60px rgba(0,0,0,0.5);
+  }
+
+  .terminal-bar {
+    background: rgba(0,255,65,0.08);
+    border-bottom: 1px solid rgba(0,255,65,0.15);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .t-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .t-dot:nth-child(1) { background: #ff5f57; }
+  .t-dot:nth-child(2) { background: #febc2e; }
+  .t-dot:nth-child(3) { background: var(--matrix-green); box-shadow: 0 0 6px var(--matrix-green); }
+
+  .terminal-title {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-left: 8px;
+  }
+
+  .terminal-body {
+    padding: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    line-height: 1.8;
+    min-height: 300px;
+  }
+
+  .t-line { display: block; }
+  .t-prompt { color: var(--matrix-green); }
+  .t-cmd { color: var(--white); }
+  .t-out { color: var(--text-dim); }
+  .t-success { color: var(--matrix-green); }
+  .t-warn { color: #ffaa00; }
+  .t-err { color: var(--red-accent); }
+  .t-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--matrix-green);
+    margin-left: 2px;
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid rgba(0,255,65,0.1);
+    padding: 60px;
+    background: rgba(0,5,0,0.9);
+  }
+
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px;
+    margin-bottom: 60px;
+  }
+
+  .footer-brand .logo-text { font-size: 22px; margin-bottom: 16px; display: block; }
+
+  .footer-brand p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.8;
+    max-width: 280px;
+  }
+
+  .footer-col h5 {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--matrix-green);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .footer-col a {
+    display: block;
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    padding: 5px 0;
+    transition: all 0.3s;
+    letter-spacing: 0.5px;
+  }
+
+  .footer-col a:hover { color: var(--matrix-green); padding-left: 8px; }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 30px;
+    border-top: 1px solid rgba(0,255,65,0.08);
+  }
+
+  .footer-bottom p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .footer-bottom p span { color: var(--matrix-green); }
+
+  /* GLITCH EFFECT */
+  .glitch {
+    position: relative;
+    display: inline-block;
+  }
+
+  .glitch::before, .glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    color: inherit;
+  }
+
+  .glitch::before {
+    left: 2px;
+    text-shadow: -2px 0 var(--red-accent);
+    clip: rect(24px, 550px, 90px, 0);
+    animation: glitch-anim 3s infinite linear alternate-reverse;
+  }
+
+  .glitch::after {
+    left: -2px;
+    text-shadow: -2px 0 #00ffff;
+    clip: rect(85px, 550px, 140px, 0);
+    animation: glitch-anim2 2s infinite linear alternate-reverse;
+  }
+
+  @keyframes glitch-anim {
+    0%{clip:rect(96px,550px,39px,0)} 10%{clip:rect(75px,550px,122px,0)} 20%{clip:rect(13px,550px,91px,0)} 30%{clip:rect(58px,550px,10px,0)} 40%{clip:rect(44px,550px,80px,0)} 50%{clip:rect(20px,550px,67px,0)} 60%{clip:rect(90px,550px,30px,0)} 70%{clip:rect(5px,550px,105px,0)} 80%{clip:rect(55px,550px,15px,0)} 90%{clip:rect(35px,550px,70px,0)} 100%{clip:rect(82px,550px,45px,0)}
+  }
+
+  @keyframes glitch-anim2 {
+    0%{clip:rect(67px,550px,40px,0)} 10%{clip:rect(20px,550px,85px,0)} 20%{clip:rect(90px,550px,25px,0)} 30%{clip:rect(10px,550px,60px,0)} 40%{clip:rect(78px,550px,35px,0)} 50%{clip:rect(45px,550px,95px,0)} 60%{clip:rect(15px,550px,50px,0)} 70%{clip:rect(88px,550px,20px,0)} 80%{clip:rect(30px,550px,75px,0)} 90%{clip:rect(62px,550px,42px,0)} 100%{clip:rect(25px,550px,88px,0)}
+  }
+
+  /* SCANLINE OVERLAY */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* SCROLL REVEAL */
+  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    nav ul { display: none; }
+    .hero { padding: 100px 24px 60px; }
+    section { padding: 60px 24px; }
+    footer { padding: 40px 24px; }
+    .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
+    .terminal-section { grid-template-columns: 1fr; }
+    .steps::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-trail" id="cursorTrail"></div>
+<div class="scanlines"></div>
+<canvas id="matrixCanvas"></canvas>
+
+<!-- NAVIGATION -->
+<nav>
+  <a href="#" class="logo">
+    <div class="logo-icon">M</div>
+    <span class="logo-text">MATRIX<span>SEC</span></span>
+  </a>
+  <ul>
+    <li><a href="#features">Xususiyatlar</a></li>
+    <li><a href="#how">Qanday ishlaydi</a></li>
+    <li><a href="#labs">Laboratoriyalar</a></li>
+    <li><a href="#pricing">Narxlar</a></li>
+  </ul>
+  <a href="#" class="nav-cta">Boshlash</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    BETA — Erta kirish ochiq
+  </div>
+  <h1>
+    <span class="line1">Kiberxavfsizlik</span>
+    <span class="line2">o'qitishning</span>
+    <span class="accent glitch" data-text="kelajagi">kelajagi</span>
+  </h1>
+  <p class="hero-sub">
+    <strong>Haqiqiy mashinalar. Haqiqiy zaifliklar.</strong><br>
+    Kuzatib emas — amaliy tajriba orqali o'rganing.<br>
+    Matrix muhitida o'z ko'nikmalarini sinab ko'ring.
+  </p>
+  <div class="hero-btns">
+    <a href="#" class="btn-primary">⚡ ERTA KIRISH HUQUQI</a>
+    <a href="#how" class="btn-secondary">BATAFSIL MA'LUMOT</a>
+  </div>
+  <div class="stats">
+    <div class="stat">
+      <span class="stat-num" data-target="127">0</span>
+      <span class="stat-label">Ro'yxatda</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" data-target="100">0</span>
+      <span class="stat-label">Laboratoriyalar</span>
+    </div>
+    <div class="stat">
+      <span class="stat-num" data-target="5">0</span>
+      <span class="stat-label">O'rganish yo'llari</span>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal">
+      <span class="section-label">Xususiyatlar</span>
+      <h2 class="section-title">Nima beradi <span class="g">MatrixSec</span>?</h2>
+      <p class="section-desc">Professional kiberxavfsizlik mutaxassislarini tayyorlash uchun maxsus ishlab chiqilgan platforma — real hujum vektorlari va mudofaa texnikalari.</p>
+    </div>
+    <div class="features-grid reveal">
+      <div class="feature-card">
+        <div class="feature-icon">⚔</div>
+        <h3>Penetration Testing</h3>
+        <p>Real tizimlarni buzish texnikalarini o'rganing. SQLi, XSS, SSRF va boshqa hujum vektorlarini amalda sinab ko'ring.</p>
+        <span class="feature-tag">Aktiv</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔬</div>
+        <h3>Malware Tahlili</h3>
+        <p>Zararli dasturlarni xavfsiz sandbox muhitida o'rganing. Reverse engineering va forensics ko'nikmalarini rivojlantiring.</p>
+        <span class="feature-tag">Aktiv</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Web Xavfsizligi</h3>
+        <p>OWASP Top 10 zaifliklarini topish va bartaraf etishni o'rganing. Bug bounty uchun tayyor bo'ling.</p>
+        <span class="feature-tag">Aktiv</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔐</div>
+        <h3>Kriptografiya</h3>
+        <p>Zamonaviy shifrlash algoritmlarini tushunish va ularning zaif tomonlarini aniqlash.</p>
+        <span class="feature-tag">Tez kunda</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📡</div>
+        <h3>Tarmoq Xavfsizligi</h3>
+        <p>Tarmoq protokollarini tahlil qilish, sniffing va man-in-the-middle hujumlarini o'rganish.</p>
+        <span class="feature-tag">Aktiv</span>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>CTF Musobaqalar</h3>
+        <p>Haftalik CTF (Capture The Flag) musobaqalarida qatnashing va reytingda yuqoriga ko'tariling.</p>
+        <span class="feature-tag">Haftalik</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL SECTION -->
+<section id="labs" style="background:rgba(0,8,0,0.5)">
+  <div class="terminal-section reveal">
+    <div>
+      <span class="section-label">Laboratoriyalar</span>
+      <h2 class="section-title">Haqiqiy <span class="g">Muhit</span></h2>
+      <p class="section-desc">Barcha laboratoriyalar Docker konteynerlarda ishlaydi. Hech narsa o'rnatmasdan brauzerdan turib hujum va mudofaa texnikalarini mashq qiling.</p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:30px">
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
+          <span style="color:var(--matrix-green);font-size:18px">✓</span> Docker-asosli izolyatsiya
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
+          <span style="color:var(--matrix-green);font-size:18px">✓</span> Brauzerdan to'g'ridan-to'g'ri kirish
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
+          <span style="color:var(--matrix-green);font-size:18px">✓</span> Avtomatik tekshirish tizimi
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
+          <span style="color:var(--matrix-green);font-size:18px">✓</span> 100+ amaliy laboratoriya
+        </div>
+      </div>
+    </div>
+    <div class="terminal-window">
+      <div class="terminal-bar">
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <div class="t-dot"></div>
+        <span class="terminal-title">matrixsec@kali:~$</span>
+      </div>
+      <div class="terminal-body" id="terminal">
+        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cmd">nmap -sV 10.0.0.1</span></span>
+        <span class="t-line t-out">Starting Nmap 7.94 ...</span>
+        <span class="t-line t-out">PORT     STATE SERVICE VERSION</span>
+        <span class="t-line t-warn">22/tcp   open  ssh     OpenSSH 7.4</span>
+        <span class="t-line t-warn">80/tcp   open  http    Apache 2.4.6</span>
+        <span class="t-line t-err">3306/tcp open  mysql   MySQL 5.6 ⚠</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cmd">sqlmap -u "http://10.0.0.1/login"</span></span>
+        <span class="t-line t-out">Testing connection to target URL...</span>
+        <span class="t-line t-success">[+] Parameter 'id' is vulnerable!</span>
+        <span class="t-line t-success">[+] Database: users_db found</span>
+        <span class="t-line">&nbsp;</span>
+        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cursor"></span></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal" style="text-align:center">
+      <span class="section-label">Qanday ishlaydi</span>
+      <h2 class="section-title" style="text-align:center">4 <span class="g">qadamda</span> boshlang</h2>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h4>Ro'yxatdan o'ting</h4>
+        <p>Platformaga ro'yxatdan o'ting va o'zingizga mos o'rganish yo'lini tanlang.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h4>Laboratoriyani yoqing</h4>
+        <p>Bir tugma bilan virtual muhit tayyor. Hech qanday sozlash talab etilmaydi.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h4>Hujum qiling</h4>
+        <p>Real zaifliklarni toping, ekspluatatsiya qiling va flag'larni toping.</p>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <h4>Sertifikat oling</h4>
+        <p>Yo'lni tugating, sertifikat oling va ish beruvchilarga ko'rsating.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div style="max-width:1200px;margin:0 auto">
+    <div class="reveal">
+      <span class="section-label">Narxlar</span>
+      <h2 class="section-title">O'zingizga mos <span class="g">rejani</span> tanlang</h2>
+    </div>
+    <div class="pricing-grid reveal">
+      <div class="price-card">
+        <div class="price-name">Starter</div>
+        <div class="price-amount">Bepul<span></span></div>
+        <div class="price-period">Doimo bepul</div>
+        <ul class="price-features">
+          <li>5 ta asosiy laboratoriya</li>
+          <li>Kiberxavfsizlik kirish kursi</li>
+          <li>Jamiyat forumi</li>
+          <li>Asosiy CTF musobaqalar</li>
+        </ul>
+        <a href="#" class="btn-plan">BOSHLASH</a>
+      </div>
+      <div class="price-card featured">
+        <div class="price-name">Pro</div>
+        <div class="price-amount">99<span>000 so'm</span></div>
+        <div class="price-period">/ oyiga</div>
+        <ul class="price-features">
+          <li>100+ laboratoriya to'liq kirish</li>
+          <li>Barcha 5 o'rganish yo'li</li>
+          <li>Haftalik CTF musobaqalar</li>
+          <li>Sertifikat imkoniyati</li>
+          <li>Ustoz bilan seans</li>
+        </ul>
+        <a href="#" class="btn-plan">PRO BOSHLASH</a>
+      </div>
+      <div class="price-card">
+        <div class="price-name">Team</div>
+        <div class="price-amount">490<span>000 so'm</span></div>
+        <div class="price-period">/ oyiga (5 kishi)</div>
+        <ul class="price-features">
+          <li>Barcha Pro imkoniyatlar</li>
+          <li>5 ta jamoaviy litsenziya</li>
+          <li>Maxsus jamoa reyting tizimi</li>
+          <li>Korporativ laboratoriyalar</li>
+          <li>Dedicated qo'llab-quvvatlash</li>
+        </ul>
+        <a href="#" class="btn-plan">JAMOA REJASI</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section style="text-align:center;padding:80px 60px">
+  <div class="reveal" style="max-width:700px;margin:0 auto">
+    <span class="section-label">Tayyor bo'ldingizmi?</span>
+    <h2 class="section-title" style="text-align:center">Kiberxavfsizlik<br><span class="g">kelajagi siz</span></h2>
+    <p style="color:var(--text-dim);font-size:17px;line-height:1.8;margin-bottom:40px">Hoziroq qo'shiling va erta kirish imtiyozlaridan foydalaning. Birinchi 200 foydalanuvchi uchun maxsus chegirmalar.</p>
+    <a href="#" class="btn-primary" style="display:inline-block;font-size:15px;padding:18px 50px">⚡ ERTA KIRISH HUQUQINI OLING</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="logo-text">MATRIX<span style="color:var(--red-accent)">SEC</span></span>
+      <p>Kiberxavfsizlik bo'yicha o'qitishning yangi avlodi. Haqiqiy muhit, haqiqiy ko'nikmalar.</p>
+    </div>
+    <div class="footer-col">
+      <h5>Platforma</h5>
+      <a href="#">Laboratoriyalar</a>
+      <a href="#">O'rganish yo'llari</a>
+      <a href="#">CTF Musobaqalar</a>
+      <a href="#">Sertifikatlar</a>
+    </div>
+    <div class="footer-col">
+      <h5>Kompaniya</h5>
+      <a href="#">Biz haqimizda</a>
+      <a href="#">Blog</a>
+      <a href="#">Karyera</a>
+      <a href="#">Hamkorlik</a>
+    </div>
+    <div class="footer-col">
+      <h5>Yordam</h5>
+      <a href="#">Hujjatlar</a>
+      <a href="#">Jamiyat</a>
+      <a href="#">Discord</a>
+      <a href="#">Aloqa</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 <span>MatrixSec</span>. Barcha huquqlar himoyalangan.</p>
+    <p style="font-size:10px">Faqat <span>ta'lim maqsadida</span> ishlatish uchun</p>
+  </div>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const trail = document.getElementById('cursorTrail');
+let mx = 0, my = 0, tx = 0, ty = 0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cursor.style.left = mx - 6 + 'px';
+  cursor.style.top = my - 6 + 'px';
+});
+
+function animateTrail() {
+  tx += (mx - tx) * 0.12;
+  ty += (my - ty) * 0.12;
+  trail.style.left = tx - 15 + 'px';
+  trail.style.top = ty - 15 + 'px';
+  requestAnimationFrame(animateTrail);
+}
+animateTrail();
+
+document.querySelectorAll('a, button, .feature-card, .price-card').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.style.transform = 'scale(2)');
+  el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
+});
+
+// MATRIX RAIN
+const canvas = document.getElementById('matrixCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  init();
+});
+
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]|<>/\\アイウエオカキクケコ';
+const fontSize = 14;
+let columns, drops;
+
+function init() {
+  columns = Math.floor(canvas.width / fontSize);
+  drops = new Array(columns).fill(1);
+}
+init();
+
+function drawMatrix() {
+  ctx.fillStyle = 'rgba(0,0,0,0.05)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.font = fontSize + 'px Share Tech Mono';
+  for (let i = 0; i < drops.length; i++) {
+    const char = chars[Math.floor(Math.random() * chars.length)];
+    const brightness = Math.random();
+    if (brightness > 0.95) {
+      ctx.fillStyle = '#ffffff';
+    } else if (brightness > 0.7) {
+      ctx.fillStyle = '#00ff41';
+    } else {
+      ctx.fillStyle = '#008f11';
+    }
+    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
+    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+    drops[i]++;
+  }
+}
+setInterval(drawMatrix, 40);
+
+// COUNTER ANIMATION
+function animateCounter(el) {
+  const target = parseInt(el.dataset.target);
+  let current = 0;
+  const inc = target / 60;
+  const timer = setInterval(() => {
+    current += inc;
+    if (current >= target) { el.textContent = target + (target === 100 ? '+' : ''); clearInterval(timer); }
+    else el.textContent = Math.floor(current) + (target === 100 ? '+' : '');
+  }, 25);
+}
+
+// SCROLL REVEAL
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      // trigger counters
+      entry.target.querySelectorAll('[data-target]').forEach(animateCounter);
+    }
+  });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.reveal, .stats').forEach(el => observer.observe(el));
+
+// TYPING EFFECT for terminal
+const terminalLines = [
+  { type: 'prompt', text: 'root@matrix:~$ ', cmd: 'nmap -sV 10.0.0.1' },
+  { type: 'out', text: 'Starting Nmap 7.94 ...' },
+  { type: 'out', text: 'PORT     STATE SERVICE VERSION' },
+  { type: 'warn', text: '22/tcp   open  ssh     OpenSSH 7.4' },
+  { type: 'warn', text: '80/tcp   open  http    Apache 2.4.6' },
+  { type: 'err', text: '3306/tcp open  mysql   MySQL 5.6 ⚠' },
+  { type: 'empty', text: '' },
+  { type: 'prompt', text: 'root@matrix:~$ ', cmd: 'sqlmap -u "http://10.0.0.1/login"' },
+  { type: 'out', text: 'Testing connection to target URL...' },
+  { type: 'success', text: '[+] Parameter \'id\' is vulnerable!' },
+  { type: 'success', text: '[+] Database: users_db found' },
+];
+</script>
+</body>
+</html>
