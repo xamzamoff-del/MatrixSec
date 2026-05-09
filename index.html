@@ -3,1204 +3,1615 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MatrixSec — Kiberxavfsizlik </title>
+<title>MatrixSec — Kiberxavfsizlik Platformasi</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --matrix-green: #00ff41;
-    --matrix-dark-green: #008f11;
-    --matrix-dim: #003b00;
-    --red-accent: #ff2a2a;
-    --bg: #000000;
-    --surface: #050f05;
-    --surface2: #0a1a0a;
-    --text: #c8ffc8;
-    --text-dim: #4a7a4a;
-    --white: #e8ffe8;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Rajdhani', sans-serif;
-    overflow-x: hidden;
-    cursor: none;
-  }
-
-  /* CUSTOM CURSOR */
-  .cursor {
-    width: 12px; height: 12px;
-    background: var(--matrix-green);
-    border-radius: 50%;
-    position: fixed;
-    top: 0; left: 0;
-    pointer-events: none;
-    z-index: 9999;
-    box-shadow: 0 0 10px var(--matrix-green), 0 0 30px var(--matrix-green);
-    transition: transform 0.1s ease;
-  }
-  .cursor-trail {
-    width: 30px; height: 30px;
-    border: 1px solid var(--matrix-green);
-    border-radius: 50%;
-    position: fixed;
-    top: 0; left: 0;
-    pointer-events: none;
-    z-index: 9998;
-    opacity: 0.4;
-    transition: all 0.15s ease;
-  }
-
-  /* MATRIX RAIN CANVAS */
-  #matrixCanvas {
-    position: fixed;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 0;
-    opacity: 0.15;
-  }
-
-  /* NAVIGATION */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    z-index: 100;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 20px 60px;
-    background: linear-gradient(180deg, rgba(0,0,0,0.95) 0%, transparent 100%);
-    border-bottom: 1px solid rgba(0, 255, 65, 0.1);
-  }
-
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-  }
-
-  .logo-icon {
-    width: 40px; height: 40px;
-    border: 2px solid var(--matrix-green);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 18px;
-    color: var(--matrix-green);
-    position: relative;
-    animation: logoPulse 3s ease-in-out infinite;
-  }
-
-  .logo-icon::before {
-    content: '';
-    position: absolute;
-    inset: -4px;
-    border: 1px solid rgba(0,255,65,0.3);
-    animation: logoRotate 6s linear infinite;
-  }
-
-  @keyframes logoPulse { 0%,100%{box-shadow:0 0 10px var(--matrix-green)} 50%{box-shadow:0 0 30px var(--matrix-green),0 0 60px rgba(0,255,65,0.3)} }
-  @keyframes logoRotate { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-
-  .logo-text {
-    font-family: 'Orbitron', monospace;
-    font-size: 20px;
-    font-weight: 900;
-    color: var(--matrix-green);
-    letter-spacing: 3px;
-    text-shadow: 0 0 20px var(--matrix-green);
-  }
-
-  .logo-text span { color: var(--red-accent); }
-
-  nav ul {
-    display: flex;
-    gap: 40px;
-    list-style: none;
-  }
-
-  nav ul li a {
-    text-decoration: none;
-    color: var(--text-dim);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    transition: all 0.3s;
-    position: relative;
-  }
-
-  nav ul li a::after {
-    content: '';
-    position: absolute;
-    bottom: -4px; left: 0; right: 0;
-    height: 1px;
-    background: var(--matrix-green);
-    transform: scaleX(0);
-    transition: transform 0.3s;
-  }
-
-  nav ul li a:hover { color: var(--matrix-green); text-shadow: 0 0 10px var(--matrix-green); }
-  nav ul li a:hover::after { transform: scaleX(1); }
-
-  .nav-cta {
-    background: transparent;
-    border: 1px solid var(--matrix-green);
-    color: var(--matrix-green) !important;
-    padding: 10px 24px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 2px;
-    text-decoration: none;
-    text-transform: uppercase;
-    cursor: none;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .nav-cta::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; width: 100%; height: 100%;
-    background: var(--matrix-green);
-    transition: left 0.3s ease;
-    z-index: -1;
-  }
-
-  .nav-cta:hover { color: var(--bg) !important; text-shadow: none !important; }
-  .nav-cta:hover::before { left: 0; }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    z-index: 1;
-    padding: 100px 60px 60px;
-    text-align: center;
-  }
-
-  .hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    border: 1px solid rgba(0,255,65,0.3);
-    background: rgba(0,255,65,0.05);
-    padding: 6px 16px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--matrix-green);
-    text-transform: uppercase;
-    margin-bottom: 40px;
-    animation: fadeSlideDown 0.8s ease forwards;
-    opacity: 0;
-  }
-
-  .hero-badge .dot {
-    width: 6px; height: 6px;
-    background: var(--matrix-green);
-    border-radius: 50%;
-    animation: blink 1.5s ease-in-out infinite;
-  }
-
-  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
-
-  .hero h1 {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(42px, 7vw, 90px);
-    font-weight: 900;
-    line-height: 1.0;
-    margin-bottom: 30px;
-    animation: fadeSlideDown 0.8s 0.2s ease forwards;
-    opacity: 0;
-  }
-
-  .hero h1 .line1 { color: var(--white); display: block; }
-  .hero h1 .line2 { color: var(--white); display: block; }
-  .hero h1 .accent {
-    color: var(--matrix-green);
-    text-shadow: 0 0 40px var(--matrix-green), 0 0 80px rgba(0,255,65,0.4);
-    display: block;
-  }
-
-  .hero-sub {
-    font-size: 18px;
-    color: var(--text-dim);
-    max-width: 600px;
-    line-height: 1.8;
-    margin-bottom: 50px;
-    font-weight: 300;
-    letter-spacing: 1px;
-    animation: fadeSlideDown 0.8s 0.4s ease forwards;
-    opacity: 0;
-  }
-
-  .hero-sub strong { color: var(--matrix-green); font-weight: 600; }
-
-  .hero-btns {
-    display: flex;
-    gap: 20px;
-    justify-content: center;
-    animation: fadeSlideDown 0.8s 0.6s ease forwards;
-    opacity: 0;
-  }
-
-  .btn-primary {
-    background: var(--matrix-green);
-    color: var(--bg);
-    border: none;
-    padding: 16px 40px;
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: none;
-    text-decoration: none;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-
-  .btn-primary::before {
-    content: '';
-    position: absolute;
-    top: 0; left: -100%; width: 100%; height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    transition: left 0.5s;
-  }
-
-  .btn-primary:hover { box-shadow: 0 0 30px var(--matrix-green); transform: translateY(-2px); }
-  .btn-primary:hover::before { left: 100%; }
-
-  .btn-secondary {
-    background: transparent;
-    color: var(--text);
-    border: 1px solid rgba(0,255,65,0.3);
-    padding: 16px 40px;
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    letter-spacing: 2px;
-    cursor: none;
-    text-decoration: none;
-    transition: all 0.3s;
-    clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  }
-
-  .btn-secondary:hover { border-color: var(--matrix-green); color: var(--matrix-green); box-shadow: 0 0 20px rgba(0,255,65,0.2); }
-
-  @keyframes fadeSlideDown { from{opacity:0;transform:translateY(-30px)} to{opacity:1;transform:translateY(0)} }
-
-  /* STATS */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    max-width: 700px;
-    width: 100%;
-    margin: 60px auto 0;
-    border: 1px solid rgba(0,255,65,0.15);
-    background: rgba(0,20,0,0.6);
-    backdrop-filter: blur(10px);
-    animation: fadeSlideDown 0.8s 0.8s ease forwards;
-    opacity: 0;
-    position: relative;
-  }
-
-  .stats::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
-  }
-
-  .stat {
-    padding: 28px 20px;
-    text-align: center;
-    border-right: 1px solid rgba(0,255,65,0.1);
-  }
-
-  .stat:last-child { border-right: none; }
-
-  .stat-num {
-    font-family: 'Orbitron', monospace;
-    font-size: 36px;
-    font-weight: 900;
-    color: var(--matrix-green);
-    text-shadow: 0 0 20px var(--matrix-green);
-    display: block;
-    line-height: 1;
-  }
-
-  .stat-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-top: 6px;
-    display: block;
-  }
-
-  /* SECTIONS */
-  section {
-    position: relative;
-    z-index: 1;
-    padding: 100px 60px;
-  }
-
-  .section-label {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 4px;
-    color: var(--matrix-green);
-    text-transform: uppercase;
-    margin-bottom: 16px;
-    display: block;
-  }
-
-  .section-label::before { content: '// '; opacity: 0.5; }
-
-  .section-title {
-    font-family: 'Orbitron', monospace;
-    font-size: clamp(28px, 4vw, 48px);
-    font-weight: 900;
-    color: var(--white);
-    margin-bottom: 20px;
-    line-height: 1.1;
-  }
-
-  .section-title .g { color: var(--matrix-green); }
-
-  .section-desc {
-    color: var(--text-dim);
-    font-size: 17px;
-    line-height: 1.8;
-    max-width: 600px;
-    margin-bottom: 60px;
-  }
-
-  /* FEATURES */
-  .features-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 2px;
-    background: rgba(0,255,65,0.05);
-  }
-
-  .feature-card {
-    background: var(--surface);
-    padding: 40px;
-    border: 1px solid rgba(0,255,65,0.08);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.4s;
-    cursor: none;
-  }
-
-  .feature-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--matrix-green), transparent);
-    transform: scaleX(0);
-    transition: transform 0.4s;
-  }
-
-  .feature-card:hover { background: var(--surface2); border-color: rgba(0,255,65,0.3); transform: translateY(-4px); }
-  .feature-card:hover::before { transform: scaleX(1); }
-
-  .feature-icon {
-    width: 56px; height: 56px;
-    border: 1px solid rgba(0,255,65,0.3);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 24px;
-    margin-bottom: 24px;
-    position: relative;
-    color: var(--matrix-green);
-    transition: all 0.4s;
-  }
-
-  .feature-card:hover .feature-icon {
-    border-color: var(--matrix-green);
-    box-shadow: 0 0 20px rgba(0,255,65,0.3);
-  }
-
-  .feature-card h3 {
-    font-family: 'Orbitron', monospace;
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--white);
-    margin-bottom: 12px;
-    letter-spacing: 1px;
-  }
-
-  .feature-card p {
-    color: var(--text-dim);
-    font-size: 15px;
-    line-height: 1.7;
-  }
-
-  .feature-card .feature-tag {
-    display: inline-block;
-    margin-top: 20px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    color: var(--matrix-green);
-    border: 1px solid rgba(0,255,65,0.2);
-    padding: 4px 10px;
-    text-transform: uppercase;
-  }
-
-  /* HOW IT WORKS */
-  .how-section { background: rgba(0,10,0,0.4); }
-
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0;
-    position: relative;
-  }
-
-  .steps::before {
-    content: '';
-    position: absolute;
-    top: 40px; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent 5%, rgba(0,255,65,0.3) 20%, rgba(0,255,65,0.3) 80%, transparent 95%);
-  }
-
-  .step {
-    padding: 0 30px 40px;
-    text-align: center;
-    position: relative;
-  }
-
-  .step-num {
-    width: 80px; height: 80px;
-    border: 2px solid var(--matrix-green);
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Orbitron', monospace;
-    font-size: 22px;
-    font-weight: 900;
-    color: var(--matrix-green);
-    text-shadow: 0 0 20px var(--matrix-green);
-    background: var(--bg);
-    margin: 0 auto 30px;
-    position: relative;
-    z-index: 1;
-    box-shadow: 0 0 30px rgba(0,255,65,0.2);
-  }
-
-  .step h4 {
-    font-family: 'Orbitron', monospace;
-    font-size: 14px;
-    color: var(--white);
-    margin-bottom: 12px;
-    letter-spacing: 1px;
-  }
-
-  .step p { color: var(--text-dim); font-size: 14px; line-height: 1.7; }
-
-  /* PRICING */
-  .pricing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 2px;
-    max-width: 900px;
-  }
-
-  .price-card {
-    background: var(--surface);
-    border: 1px solid rgba(0,255,65,0.1);
-    padding: 40px;
-    position: relative;
-    transition: all 0.4s;
-  }
-
-  .price-card.featured {
-    border-color: var(--matrix-green);
-    background: rgba(0,20,0,0.8);
-  }
-
-  .price-card.featured::before {
-    content: 'TAVSIYA ETILADI';
-    position: absolute;
-    top: -1px; left: 50%; transform: translateX(-50%);
-    background: var(--matrix-green);
-    color: var(--bg);
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 2px;
-    padding: 4px 16px;
-    white-space: nowrap;
-  }
-
-  .price-card:not(.featured):hover { border-color: rgba(0,255,65,0.4); transform: translateY(-4px); }
-  .price-card.featured:hover { transform: translateY(-4px); box-shadow: 0 0 40px rgba(0,255,65,0.2); }
-
-  .price-name {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 3px;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-
-  .price-amount {
-    font-family: 'Orbitron', monospace;
-    font-size: 48px;
-    font-weight: 900;
-    color: var(--matrix-green);
-    text-shadow: 0 0 20px var(--matrix-green);
-    line-height: 1;
-  }
-
-  .price-amount span { font-size: 18px; color: var(--text-dim); }
-
-  .price-period {
-    font-size: 13px;
-    color: var(--text-dim);
-    margin: 8px 0 30px;
-    font-family: 'Share Tech Mono', monospace;
-  }
-
-  .price-features { list-style: none; margin-bottom: 30px; }
-
-  .price-features li {
-    padding: 8px 0;
-    font-size: 14px;
-    color: var(--text-dim);
-    border-bottom: 1px solid rgba(0,255,65,0.05);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .price-features li::before {
-    content: '▸';
-    color: var(--matrix-green);
-    font-size: 10px;
-    flex-shrink: 0;
-  }
-
-  .btn-plan {
-    display: block;
-    text-align: center;
-    text-decoration: none;
-    padding: 14px;
-    font-family: 'Orbitron', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: none;
-    transition: all 0.3s;
-    border: 1px solid rgba(0,255,65,0.4);
-    color: var(--matrix-green);
-    background: transparent;
-  }
-
-  .btn-plan:hover, .price-card.featured .btn-plan {
-    background: var(--matrix-green);
-    color: var(--bg);
-    border-color: var(--matrix-green);
-    box-shadow: 0 0 20px rgba(0,255,65,0.4);
-  }
-
-  /* TERMINAL SECTION */
-  .terminal-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 60px;
-    align-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-
-  .terminal-window {
-    background: rgba(0,10,0,0.95);
-    border: 1px solid rgba(0,255,65,0.3);
-    border-radius: 2px;
-    overflow: hidden;
-    box-shadow: 0 0 60px rgba(0,255,65,0.1), inset 0 0 60px rgba(0,0,0,0.5);
-  }
-
-  .terminal-bar {
-    background: rgba(0,255,65,0.08);
-    border-bottom: 1px solid rgba(0,255,65,0.15);
-    padding: 10px 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .t-dot { width: 10px; height: 10px; border-radius: 50%; }
-  .t-dot:nth-child(1) { background: #ff5f57; }
-  .t-dot:nth-child(2) { background: #febc2e; }
-  .t-dot:nth-child(3) { background: var(--matrix-green); box-shadow: 0 0 6px var(--matrix-green); }
-
-  .terminal-title {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 2px;
-    margin-left: 8px;
-  }
-
-  .terminal-body {
-    padding: 24px;
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 13px;
-    line-height: 1.8;
-    min-height: 300px;
-  }
-
-  .t-line { display: block; }
-  .t-prompt { color: var(--matrix-green); }
-  .t-cmd { color: var(--white); }
-  .t-out { color: var(--text-dim); }
-  .t-success { color: var(--matrix-green); }
-  .t-warn { color: #ffaa00; }
-  .t-err { color: var(--red-accent); }
-  .t-cursor {
-    display: inline-block;
-    width: 8px; height: 14px;
-    background: var(--matrix-green);
-    margin-left: 2px;
-    vertical-align: middle;
-    animation: blink 1s step-end infinite;
-  }
-
-  /* FOOTER */
-  footer {
-    position: relative;
-    z-index: 1;
-    border-top: 1px solid rgba(0,255,65,0.1);
-    padding: 60px;
-    background: rgba(0,5,0,0.9);
-  }
-
-  .footer-grid {
-    display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 60px;
-    margin-bottom: 60px;
-  }
-
-  .footer-brand .logo-text { font-size: 22px; margin-bottom: 16px; display: block; }
-
-  .footer-brand p {
-    color: var(--text-dim);
-    font-size: 14px;
-    line-height: 1.8;
-    max-width: 280px;
-  }
-
-  .footer-col h5 {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 3px;
-    color: var(--matrix-green);
-    text-transform: uppercase;
-    margin-bottom: 20px;
-  }
-
-  .footer-col a {
-    display: block;
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 14px;
-    padding: 5px 0;
-    transition: all 0.3s;
-    letter-spacing: 0.5px;
-  }
-
-  .footer-col a:hover { color: var(--matrix-green); padding-left: 8px; }
-
-  .footer-bottom {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 30px;
-    border-top: 1px solid rgba(0,255,65,0.08);
-  }
-
-  .footer-bottom p {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    letter-spacing: 1px;
-  }
-
-  .footer-bottom p span { color: var(--matrix-green); }
-
-  /* GLITCH EFFECT */
-  .glitch {
-    position: relative;
-    display: inline-block;
-  }
-
-  .glitch::before, .glitch::after {
-    content: attr(data-text);
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%; height: 100%;
-    font-family: inherit;
-    font-size: inherit;
-    font-weight: inherit;
-    color: inherit;
-  }
-
-  .glitch::before {
-    left: 2px;
-    text-shadow: -2px 0 var(--red-accent);
-    clip: rect(24px, 550px, 90px, 0);
-    animation: glitch-anim 3s infinite linear alternate-reverse;
-  }
-
-  .glitch::after {
-    left: -2px;
-    text-shadow: -2px 0 #00ffff;
-    clip: rect(85px, 550px, 140px, 0);
-    animation: glitch-anim2 2s infinite linear alternate-reverse;
-  }
-
-  @keyframes glitch-anim {
-    0%{clip:rect(96px,550px,39px,0)} 10%{clip:rect(75px,550px,122px,0)} 20%{clip:rect(13px,550px,91px,0)} 30%{clip:rect(58px,550px,10px,0)} 40%{clip:rect(44px,550px,80px,0)} 50%{clip:rect(20px,550px,67px,0)} 60%{clip:rect(90px,550px,30px,0)} 70%{clip:rect(5px,550px,105px,0)} 80%{clip:rect(55px,550px,15px,0)} 90%{clip:rect(35px,550px,70px,0)} 100%{clip:rect(82px,550px,45px,0)}
-  }
-
-  @keyframes glitch-anim2 {
-    0%{clip:rect(67px,550px,40px,0)} 10%{clip:rect(20px,550px,85px,0)} 20%{clip:rect(90px,550px,25px,0)} 30%{clip:rect(10px,550px,60px,0)} 40%{clip:rect(78px,550px,35px,0)} 50%{clip:rect(45px,550px,95px,0)} 60%{clip:rect(15px,550px,50px,0)} 70%{clip:rect(88px,550px,20px,0)} 80%{clip:rect(30px,550px,75px,0)} 90%{clip:rect(62px,550px,42px,0)} 100%{clip:rect(25px,550px,88px,0)}
-  }
-
-  /* SCANLINE OVERLAY */
-  .scanlines {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
-    z-index: 0;
-    pointer-events: none;
-  }
-
-  /* SCROLL REVEAL */
-  .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.16,1,0.3,1); }
-  .reveal.visible { opacity: 1; transform: translateY(0); }
-
-  /* RESPONSIVE */
-  @media (max-width: 900px) {
-    nav { padding: 16px 24px; }
-    nav ul { display: none; }
-    .hero { padding: 100px 24px 60px; }
-    section { padding: 60px 24px; }
-    footer { padding: 40px 24px; }
-    .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; }
-    .terminal-section { grid-template-columns: 1fr; }
-    .steps::before { display: none; }
-  }
+/* ═══════════════════════════════════════════
+   RESET & VARIABLES
+═══════════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --g:#00ff41;--gd:#008f11;--gdim:#003b00;
+  --r:#ff2a2a;--rd:#cc0000;
+  --bg:#000;--s1:#050f05;--s2:#0a1a0a;--s3:#0f250f;
+  --t:#c8ffc8;--td:#4a7a4a;--tw:#e8ffe8;
+  --border:rgba(0,255,65,0.15);--border2:rgba(0,255,65,0.3);
+  --glow:0 0 20px rgba(0,255,65,0.4);
+  --font-mono:'Share Tech Mono',monospace;
+  --font-head:'Orbitron',monospace;
+  --font-body:'Rajdhani',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:var(--font-body);overflow-x:hidden;cursor:none;min-height:100vh}
+
+/* ═══════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════ */
+#cur{width:10px;height:10px;background:var(--g);border-radius:50%;position:fixed;pointer-events:none;z-index:9999;box-shadow:0 0 8px var(--g),0 0 20px var(--g);transition:transform .1s;top:0;left:0}
+#cur2{width:28px;height:28px;border:1px solid rgba(0,255,65,.5);border-radius:50%;position:fixed;pointer-events:none;z-index:9998;top:0;left:0;transition:all .12s ease}
+
+/* ═══════════════════════════════════════════
+   MATRIX CANVAS
+═══════════════════════════════════════════ */
+#mc{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;opacity:.12;pointer-events:none}
+
+/* ═══════════════════════════════════════════
+   SCANLINES
+═══════════════════════════════════════════ */
+.scan{position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);z-index:1;pointer-events:none}
+
+/* ═══════════════════════════════════════════
+   PAGES SYSTEM
+═══════════════════════════════════════════ */
+.page{display:none;position:relative;z-index:2;min-height:100vh;animation:fadeIn .4s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ═══════════════════════════════════════════
+   NAVIGATION
+═══════════════════════════════════════════ */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 50px;background:linear-gradient(180deg,rgba(0,0,0,.97) 0%,transparent 100%);border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;cursor:none}
+.logo-box{width:36px;height:36px;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-family:var(--font-mono);font-size:16px;color:var(--g);animation:pulse 3s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 8px var(--g)}50%{box-shadow:0 0 25px var(--g),0 0 50px rgba(0,255,65,.3)}}
+.logo-txt{font-family:var(--font-head);font-size:18px;font-weight:900;color:var(--g);letter-spacing:3px;text-shadow:0 0 15px var(--g)}
+.logo-txt span{color:var(--r)}
+.nav-links{display:flex;gap:30px;list-style:none}
+.nav-links a{color:var(--td);font-family:var(--font-mono);font-size:12px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;transition:all .3s;cursor:none}
+.nav-links a:hover{color:var(--g);text-shadow:0 0 8px var(--g)}
+.nav-actions{display:flex;gap:12px;align-items:center}
+#nav-user-info{display:none;align-items:center;gap:10px}
+#nav-username{font-family:var(--font-mono);font-size:12px;color:var(--g)}
+.nav-plan{font-size:10px;padding:2px 8px;border:1px solid var(--g);color:var(--g);letter-spacing:1px;font-family:var(--font-mono)}
+
+/* ═══════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════ */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;font-family:var(--font-head);font-size:12px;font-weight:700;letter-spacing:2px;cursor:none;text-decoration:none;border:none;transition:all .3s;clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%)}
+.btn-g{background:var(--g);color:var(--bg)}
+.btn-g:hover{box-shadow:0 0 25px var(--g);transform:translateY(-2px)}
+.btn-o{background:transparent;color:var(--t);border:1px solid var(--border2)}
+.btn-o:hover{border-color:var(--g);color:var(--g);box-shadow:0 0 15px rgba(0,255,65,.2)}
+.btn-r{background:var(--r);color:#fff}
+.btn-r:hover{box-shadow:0 0 25px var(--r);transform:translateY(-2px)}
+.btn-sm{padding:7px 18px;font-size:10px}
+.btn-full{width:100%;justify-content:center}
+
+/* ═══════════════════════════════════════════
+   SECTION HELPERS
+═══════════════════════════════════════════ */
+.wrap{max-width:1200px;margin:0 auto;padding:0 50px}
+.sec{padding:90px 0;position:relative;z-index:2}
+.sec-label{font-family:var(--font-mono);font-size:11px;letter-spacing:4px;color:var(--g);text-transform:uppercase;margin-bottom:12px;display:block}
+.sec-label::before{content:'// ';opacity:.5}
+.sec-title{font-family:var(--font-head);font-size:clamp(26px,4vw,44px);font-weight:900;color:var(--tw);margin-bottom:16px;line-height:1.1}
+.sec-title .g{color:var(--g)}
+.sec-desc{color:var(--td);font-size:16px;line-height:1.8;max-width:580px;margin-bottom:50px}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:30px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+
+/* CARD */
+.card{background:var(--s1);border:1px solid var(--border);padding:30px;transition:all .3s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent);transform:scaleX(0);transition:transform .3s}
+.card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.card:hover::before{transform:scaleX(1)}
+.card-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--tw);margin-bottom:10px;letter-spacing:1px}
+.card-desc{color:var(--td);font-size:14px;line-height:1.7}
+
+/* TAG */
+.tag{display:inline-block;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;padding:3px 10px;border:1px solid;text-transform:uppercase}
+.tag-g{color:var(--g);border-color:rgba(0,255,65,.3)}
+.tag-r{color:var(--r);border-color:rgba(255,42,42,.3)}
+.tag-y{color:#ffaa00;border-color:rgba(255,170,0,.3)}
+
+/* BADGE DIFFICULTY */
+.diff-easy{color:#00ff41;border-color:rgba(0,255,65,.3)}
+.diff-medium{color:#ffaa00;border-color:rgba(255,170,0,.3)}
+.diff-hard{color:#ff6600;border-color:rgba(255,102,0,.3)}
+.diff-insane{color:#ff2a2a;border-color:rgba(255,42,42,.3)}
+
+/* DIVIDER */
+.div-g{height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent);margin:60px 0}
+
+/* ═══════════════════════════════════════════
+   TOAST NOTIFICATIONS
+═══════════════════════════════════════════ */
+#toast-wrap{position:fixed;bottom:30px;right:30px;z-index:9999;display:flex;flex-direction:column;gap:10px}
+.toast{padding:14px 22px;font-family:var(--font-mono);font-size:12px;letter-spacing:1px;border-left:3px solid;min-width:280px;animation:toastIn .3s ease;background:rgba(0,10,0,.97);backdrop-filter:blur(10px)}
+.toast.success{border-color:var(--g);color:var(--g)}
+.toast.error{border-color:var(--r);color:var(--r)}
+.toast.info{border-color:#00aaff;color:#00aaff}
+@keyframes toastIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* ═══════════════════════════════════════════
+   MODAL
+═══════════════════════════════════════════ */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-bg.open{display:flex}
+.modal{background:var(--s1);border:1px solid var(--border2);padding:40px;min-width:420px;max-width:90vw;position:relative;animation:fadeIn .3s ease}
+.modal-close{position:absolute;top:16px;right:16px;background:none;border:none;color:var(--td);font-size:20px;cursor:none;transition:color .2s}
+.modal-close:hover{color:var(--r)}
+.modal-title{font-family:var(--font-head);font-size:18px;font-weight:700;color:var(--tw);margin-bottom:24px}
+
+/* ═══════════════════════════════════════════
+   FORM ELEMENTS
+═══════════════════════════════════════════ */
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;color:var(--td);text-transform:uppercase;margin-bottom:8px}
+.form-input,.form-select,.form-textarea{width:100%;background:rgba(0,20,0,.6);border:1px solid var(--border);color:var(--t);padding:12px 16px;font-family:var(--font-mono);font-size:13px;outline:none;transition:border .3s;cursor:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--g);box-shadow:0 0 0 1px rgba(0,255,65,.1)}
+.form-select option{background:var(--s1);color:var(--t)}
+.form-textarea{resize:vertical;min-height:100px}
+.form-error{color:var(--r);font-family:var(--font-mono);font-size:11px;margin-top:6px;display:none}
+
+/* ═══════════════════════════════════════════
+   LOADER
+═══════════════════════════════════════════ */
+.loader{display:inline-block;width:16px;height:16px;border:2px solid rgba(0,255,65,.2);border-top-color:var(--g);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#page-loader{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;transition:opacity .5s}
+#page-loader .loader{width:40px;height:40px;border-width:3px}
+#page-loader p{font-family:var(--font-mono);color:var(--g);font-size:12px;letter-spacing:3px;animation:blink 1s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ═══════════════════════════════════════════
+   ████  PAGE: LANDING  ████
+═══════════════════════════════════════════ */
+.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 50px 60px;text-align:center;position:relative;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,255,65,.3);background:rgba(0,255,65,.05);padding:5px 14px;font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--g);text-transform:uppercase;margin-bottom:36px}
+.hero-badge .dot{width:6px;height:6px;background:var(--g);border-radius:50%;animation:blink 1.5s ease-in-out infinite}
+.hero h1{font-family:var(--font-head);font-size:clamp(40px,8vw,100px);font-weight:900;line-height:.95;margin-bottom:28px}
+.hero h1 .w{color:var(--tw);display:block}
+.hero h1 .accent{color:var(--g);text-shadow:0 0 40px var(--g),0 0 80px rgba(0,255,65,.3);display:block;position:relative}
+/* Glitch */
+.glitch{position:relative;display:inline-block}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;font-family:inherit;font-size:inherit;font-weight:inherit}
+.glitch::before{left:3px;text-shadow:-2px 0 var(--r);animation:gl1 3s infinite;clip:rect(20px,900px,80px,0)}
+.glitch::after{left:-3px;text-shadow:2px 0 #00ffff;animation:gl2 2.5s infinite;clip:rect(60px,900px,120px,0)}
+@keyframes gl1{0%{clip:rect(64px,9999px,30px,0)}5%{clip:rect(12px,9999px,90px,0)}10%{clip:rect(75px,9999px,15px,0)}15%{clip:rect(40px,9999px,60px,0)}20%{clip:rect(82px,9999px,42px,0)}25%{clip:rect(5px,9999px,70px,0)}30%{clip:rect(55px,9999px,25px,0)}100%{clip:rect(55px,9999px,25px,0)}}
+@keyframes gl2{0%{clip:rect(30px,9999px,70px,0)}7%{clip:rect(90px,9999px,20px,0)}14%{clip:rect(15px,9999px,85px,0)}21%{clip:rect(65px,9999px,10px,0)}100%{clip:rect(65px,9999px,10px,0)}}
+.hero-sub{font-size:18px;color:var(--td);max-width:580px;line-height:1.8;margin-bottom:44px;font-weight:300;letter-spacing:.5px}
+.hero-sub strong{color:var(--g);font-weight:600}
+.hero-btns{display:flex;gap:16px;justify-content:center;margin-bottom:60px;flex-wrap:wrap}
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);max-width:680px;width:100%;border:1px solid var(--border);background:rgba(0,20,0,.7);backdrop-filter:blur(10px);position:relative}
+.stats-bar::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+.stat{padding:24px 16px;text-align:center;border-right:1px solid var(--border)}
+.stat:last-child{border-right:none}
+.stat-n{font-family:var(--font-head);font-size:34px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);display:block;line-height:1}
+.stat-l{font-family:var(--font-mono);font-size:10px;letter-spacing:2px;color:var(--td);text-transform:uppercase;margin-top:4px;display:block}
+
+/* FEATURES */
+.feat-icon{width:52px;height:52px;border:1px solid rgba(0,255,65,.3);display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;transition:all .3s}
+.card:hover .feat-icon{border-color:var(--g);box-shadow:0 0 15px rgba(0,255,65,.3)}
+
+/* TERMINAL CARD */
+.term-win{background:rgba(0,8,0,.97);border:1px solid var(--border2);box-shadow:0 0 50px rgba(0,255,65,.08)}
+.term-bar{background:rgba(0,255,65,.07);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:8px}
+.td{width:10px;height:10px;border-radius:50%}
+.td1{background:#ff5f57}.td2{background:#febc2e}.td3{background:var(--g);box-shadow:0 0 5px var(--g)}
+.term-title-bar{font-family:var(--font-mono);font-size:11px;color:var(--td);letter-spacing:2px;margin-left:8px}
+.term-body{padding:20px;font-family:var(--font-mono);font-size:12px;line-height:1.9;min-height:280px}
+.tp{color:var(--g)}.tc{color:var(--tw)}.to{color:var(--td)}.ts{color:var(--g)}.tw2{color:#ffaa00}.te{color:var(--r)}
+.tcur{display:inline-block;width:8px;height:13px;background:var(--g);margin-left:2px;vertical-align:middle;animation:blink 1s step-end infinite}
+
+/* PRICING */
+.price-card{background:var(--s1);border:1px solid var(--border);padding:36px;transition:all .4s;position:relative}
+.price-card.featured{border-color:var(--g)}
+.price-card.featured::before{content:'TAVSIYA';position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--g);color:var(--bg);font-family:var(--font-mono);font-size:9px;letter-spacing:2px;padding:3px 14px;white-space:nowrap}
+.price-card:hover{transform:translateY(-4px)}
+.price-card.featured:hover{box-shadow:0 0 40px rgba(0,255,65,.15)}
+.price-name{font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--td);text-transform:uppercase;margin-bottom:16px}
+.price-amt{font-family:var(--font-head);font-size:44px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);line-height:1}
+.price-amt span{font-size:16px;color:var(--td)}
+.price-per{font-size:12px;color:var(--td);margin:6px 0 24px;font-family:var(--font-mono)}
+.price-feats{list-style:none;margin-bottom:26px}
+.price-feats li{padding:7px 0;font-size:13px;color:var(--td);border-bottom:1px solid rgba(0,255,65,.05);display:flex;align-items:center;gap:8px}
+.price-feats li::before{content:'▸';color:var(--g);font-size:9px;flex-shrink:0}
+
+/* ═══════════════════════════════════════════
+   ████  PAGE: AUTH  ████
+═══════════════════════════════════════════ */
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:80px 20px;position:relative;z-index:2}
+.auth-box{width:100%;max-width:440px;background:var(--s1);border:1px solid var(--border2);padding:44px;position:relative}
+.auth-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent)}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-title{font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--tw);margin-bottom:6px}
+.auth-sub{color:var(--td);font-size:13px;font-family:var(--font-mono)}
+.auth-switch{text-align:center;margin-top:20px;font-family:var(--font-mono);font-size:12px;color:var(--td)}
+.auth-switch a{color:var(--g);cursor:none;text-decoration:none}
+.auth-switch a:hover{text-shadow:0 0 8px var(--g)}
+.divider{display:flex;align-items:center;gap:16px;margin:24px 0;color:var(--td);font-family:var(--font-mono);font-size:11px;letter-spacing:2px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ═══════════════════════════════════════════
+   ████  PAGE: DASHBOARD  ████
+═══════════════════════════════════════════ */
+.dash-layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;position:relative;z-index:2}
+.sidebar{background:rgba(0,8,0,.95);border-right:1px solid var(--border);padding:90px 0 30px;position:sticky;top:0;height:100vh;overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-user{padding:20px 24px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.sidebar-avatar{width:48px;height:48px;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:20px;font-weight:900;color:var(--g);text-shadow:0 0 10px var(--g);margin-bottom:10px}
+.sidebar-name{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--tw);letter-spacing:1px}
+.sidebar-plan{font-family:var(--font-mono);font-size:10px;color:var(--td);letter-spacing:2px;margin-top:2px}
+.sidebar-pts{font-family:var(--font-mono);font-size:11px;color:var(--g);margin-top:6px}
+.sidebar-nav{list-style:none;flex:1}
+.sidebar-nav li a{display:flex;align-items:center;gap:12px;padding:12px 24px;color:var(--td);font-family:var(--font-mono);font-size:12px;letter-spacing:1px;text-decoration:none;transition:all .2s;cursor:none;text-transform:uppercase}
+.sidebar-nav li a:hover,.sidebar-nav li a.active{color:var(--g);background:rgba(0,255,65,.07);border-right:2px solid var(--g)}
+.sidebar-nav li a .icon{font-size:15px;width:20px;text-align:center}
+.sidebar-bot{padding:16px 24px;border-top:1px solid var(--border)}
+.dash-main{padding:90px 40px 40px}
+.dash-header{margin-bottom:36px}
+.dash-title{font-family:var(--font-head);font-size:26px;font-weight:900;color:var(--tw)}
+.dash-subtitle{color:var(--td);font-family:var(--font-mono);font-size:12px;margin-top:4px}
+
+/* Stat cards */
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.stat-card{background:var(--s1);border:1px solid var(--border);padding:20px;position:relative;overflow:hidden}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--g),transparent)}
+.sc-val{font-family:var(--font-head);font-size:30px;font-weight:900;color:var(--g);text-shadow:0 0 12px var(--g)}
+.sc-lbl{font-family:var(--font-mono);font-size:10px;color:var(--td);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.sc-icon{position:absolute;right:16px;top:16px;font-size:28px;opacity:.15}
+
+/* Tables */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-family:var(--font-mono);font-size:12px}
+th{color:var(--td);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);letter-spacing:2px;text-transform:uppercase;font-weight:400}
+td{padding:12px 14px;border-bottom:1px solid rgba(0,255,65,.04);color:var(--t);font-size:13px}
+tr:hover td{background:rgba(0,255,65,.03)}
+
+/* Lab grid */
+.lab-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.lab-card{background:var(--s1);border:1px solid var(--border);padding:24px;cursor:none;transition:all .3s;position:relative;overflow:hidden}
+.lab-card:hover{border-color:var(--border2);transform:translateY(-3px)}
+.lab-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--g),transparent);transform:scaleX(0);transition:transform .3s}
+.lab-card:hover::before{transform:scaleX(1)}
+.lab-cat{font-family:var(--font-mono);font-size:9px;letter-spacing:3px;color:var(--td);text-transform:uppercase;margin-bottom:10px}
+.lab-name{font-family:var(--font-head);font-size:15px;font-weight:700;color:var(--tw);margin-bottom:8px;letter-spacing:.5px}
+.lab-desc{color:var(--td);font-size:13px;line-height:1.6;margin-bottom:16px}
+.lab-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lab-pts{font-family:var(--font-mono);font-size:11px;color:var(--g)}
+.lab-solved{position:absolute;top:16px;right:16px;font-size:18px}
+
+/* Progress bar */
+.prog-bar{height:4px;background:rgba(0,255,65,.1);border-radius:2px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;background:var(--g);box-shadow:0 0 6px var(--g);transition:width .8s ease;border-radius:2px}
+
+/* Flag submit */
+.flag-input-wrap{display:flex;gap:10px}
+.flag-input-wrap .form-input{flex:1}
+
+/* ═══════════════════════════════════════════
+   ████  PAGE: ADMIN  ████
+═══════════════════════════════════════════ */
+.admin-tabs{display:flex;gap:2px;margin-bottom:30px;border-bottom:1px solid var(--border)}
+.admin-tab{padding:10px 24px;font-family:var(--font-mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--td);cursor:none;background:none;border:none;border-bottom:2px solid transparent;transition:all .2s}
+.admin-tab:hover{color:var(--g)}
+.admin-tab.active{color:var(--g);border-bottom-color:var(--g)}
+.admin-panel{display:none}
+.admin-panel.active{display:block}
+
+/* ═══════════════════════════════════════════
+   PAYMENT PAGE
+═══════════════════════════════════════════ */
+.payment-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:860px}
+
+/* ═══════════════════════════════════════════
+   PROFILE PAGE
+═══════════════════════════════════════════ */
+.profile-header{display:flex;align-items:center;gap:24px;margin-bottom:36px;padding:30px;background:var(--s1);border:1px solid var(--border)}
+.profile-avatar-big{width:80px;height:80px;border:2px solid var(--g);display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:32px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g)}
+.profile-info .name{font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--tw)}
+.profile-info .meta{font-family:var(--font-mono);font-size:11px;color:var(--td);letter-spacing:2px;margin-top:4px}
+.achievement{display:flex;align-items:center;gap:12px;padding:14px;background:var(--s1);border:1px solid var(--border);margin-bottom:10px}
+.ach-icon{font-size:24px;width:40px;text-align:center}
+.ach-name{font-family:var(--font-head);font-size:12px;color:var(--tw);letter-spacing:1px}
+.ach-desc{font-family:var(--font-mono);font-size:10px;color:var(--td);margin-top:2px}
+
+/* ═══════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════ */
+.lb-row{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid var(--border);transition:background .2s}
+.lb-row:hover{background:rgba(0,255,65,.03)}
+.lb-rank{font-family:var(--font-head);font-size:18px;font-weight:900;width:40px;text-align:center}
+.lb-rank.gold{color:#ffd700;text-shadow:0 0 10px #ffd700}
+.lb-rank.silver{color:#c0c0c0}
+.lb-rank.bronze{color:#cd7f32}
+.lb-rank.other{color:var(--td)}
+.lb-name{flex:1;font-family:var(--font-head);font-size:13px;color:var(--tw)}
+.lb-pts{font-family:var(--font-mono);font-size:14px;color:var(--g);font-weight:bold}
+.lb-solved{font-family:var(--font-mono);font-size:11px;color:var(--td)}
+
+/* ═══════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════ */
+@media(max-width:900px){
+  nav{padding:12px 20px}
+  .nav-links{display:none}
+  .hero{padding:90px 20px 50px}
+  .wrap{padding:0 20px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+  .dash-layout{grid-template-columns:1fr}
+  .sidebar{display:none}
+  .dash-main{padding:70px 20px 30px}
+  .stat-cards{grid-template-columns:1fr 1fr}
+  .payment-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<div class="cursor" id="cursor"></div>
-<div class="cursor-trail" id="cursorTrail"></div>
-<div class="scanlines"></div>
-<canvas id="matrixCanvas"></canvas>
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur2"></div>
 
-<!-- NAVIGATION -->
-<nav>
-  <a href="#" class="logo">
-    <div class="logo-icon">M</div>
-    <span class="logo-text">MATRIX<span>SEC</span></span>
-  </a>
-  <ul>
-    <li><a href="#features">Xususiyatlar</a></li>
-    <li><a href="#how">Qanday ishlaydi</a></li>
-    <li><a href="#labs">Laboratoriyalar</a></li>
-    <li><a href="#pricing">Narxlar</a></li>
+<!-- MATRIX BG -->
+<canvas id="mc"></canvas>
+<div class="scan"></div>
+
+<!-- PAGE LOADER -->
+<div id="page-loader">
+  <div class="loader"></div>
+  <p>MATRIXSEC YUKLANMOQDA...</p>
+</div>
+
+<!-- TOAST -->
+<div id="toast-wrap"></div>
+
+<!-- ═══════════════════════════════════════
+     NAVIGATION
+═══════════════════════════════════════ -->
+<nav id="navbar">
+  <div class="logo" onclick="goPage('landing')">
+    <div class="logo-box">M</div>
+    <span class="logo-txt">MATRIX<span>SEC</span></span>
+  </div>
+  <ul class="nav-links" id="nav-links-guest">
+    <li><a href="#" onclick="goPage('landing');return false">Bosh sahifa</a></li>
+    <li><a href="#" onclick="goSection('features');return false">Xususiyatlar</a></li>
+    <li><a href="#" onclick="goSection('how');return false">Qanday ishlaydi</a></li>
+    <li><a href="#" onclick="goPage('labs');return false">Laboratoriyalar</a></li>
   </ul>
-  <a href="#" class="nav-cta">Boshlash</a>
+  <ul class="nav-links" id="nav-links-user" style="display:none">
+    <li><a href="#" onclick="goPage('dashboard');return false">Dashboard</a></li>
+    <li><a href="#" onclick="goPage('labs');return false">Laboratoriyalar</a></li>
+    <li><a href="#" onclick="goPage('leaderboard');return false">Reyting</a></li>
+    <li><a href="#" onclick="goPage('payment');return false">Pro</a></li>
+  </ul>
+  <div class="nav-actions">
+    <div id="nav-user-info">
+      <span id="nav-username"></span>
+      <span class="nav-plan" id="nav-plan"></span>
+      <button class="btn btn-o btn-sm" onclick="logout()">Chiqish</button>
+    </div>
+    <div id="nav-guest-btns">
+      <button class="btn btn-o btn-sm" onclick="goPage('login')">Kirish</button>
+      <button class="btn btn-g btn-sm" onclick="goPage('register')">Ro'yxatdan o'tish</button>
+    </div>
+  </div>
 </nav>
 
-<!-- HERO -->
-<section class="hero">
-  <div class="hero-badge">
-    <span class="dot"></span>
-    BETA — Erta kirish ochiq
-  </div>
-  <h1>
-    <span class="line1">Kiberxavfsizlik</span>
-    <span class="line2">o‘rganing</span>
-   
-  </h1>
-  <p class="hero-sub">
-    <strong>Haqiqiy mashinalar. Haqiqiy zaifliklar.</strong><br>
-    Kuzatib emas — amaliy tajriba orqali o'rganing.<br>
-    Matrix muhitida o'z ko'nikmalarini sinab ko'ring.
-  </p>
-  <div class="hero-btns">
-    <a href="#" class="btn-primary">⚡ ERTA KIRISH HUQUQI</a>
-    <a href="#how" class="btn-secondary">BATAFSIL MA'LUMOT</a>
-  </div>
-  <div class="stats">
-    <div class="stat">
-      <span class="stat-num" data-target="127">0</span>
-      <span class="stat-label">Ro'yxatda</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num" data-target="100">0</span>
-      <span class="stat-label">Laboratoriyalar</span>
-    </div>
-    <div class="stat">
-      <span class="stat-num" data-target="5">0</span>
-      <span class="stat-label">O'rganish yo'llari</span>
-    </div>
-  </div>
-</section>
+<!-- ═══════════════════════════════════════
+     PAGE: LANDING
+═══════════════════════════════════════ -->
+<div class="page active" id="page-landing">
 
-<!-- FEATURES -->
-<section id="features">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="reveal">
-      <span class="section-label">Xususiyatlar</span>
-      <h2 class="section-title">Nima beradi <span class="g">MatrixSec</span>?</h2>
-      <p class="section-desc">Professional kiberxavfsizlik mutaxassislarini tayyorlash uchun maxsus ishlab chiqilgan platforma — real hujum vektorlari va mudofaa texnikalari.</p>
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><span class="dot"></span>BETA — Erta kirish ochiq</div>
+    <h1>
+      <span class="w">Kiberxavfsizlikni o‘rganing</span>
+    </h1>
+    <p class="hero-sub">
+      <strong>Haqiqiy mashinalar. Haqiqiy zaifliklar.</strong><br>
+      Kuzatib emas — amaliy tajriba orqali o'rganing.<br>
+      Matrix muhitida o'z ko'nikmalarini sinab ko'ring.
+    </p>
+    <div class="hero-btns">
+      <button class="btn btn-g" onclick="goPage('register')">⚡ BOSHLASH</button>
+      <button class="btn btn-o" onclick="goSection('how')">BATAFSIL</button>
     </div>
-    <div class="features-grid reveal">
-      <div class="feature-card">
-        <div class="feature-icon">⚔</div>
-        <h3>Penetration Testing</h3>
-        <p>Real tizimlarni buzish texnikalarini o'rganing. SQLi, XSS, SSRF va boshqa hujum vektorlarini amalda sinab ko'ring.</p>
-        <span class="feature-tag">Aktiv</span>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔬</div>
-        <h3>Malware Tahlili</h3>
-        <p>Zararli dasturlarni xavfsiz sandbox muhitida o'rganing. Reverse engineering va forensics ko'nikmalarini rivojlantiring.</p>
-        <span class="feature-tag">Aktiv</span>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🌐</div>
-        <h3>Web Xavfsizligi</h3>
-        <p>OWASP Top 10 zaifliklarini topish va bartaraf etishni o'rganing. Bug bounty uchun tayyor bo'ling.</p>
-        <span class="feature-tag">Aktiv</span>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔐</div>
-        <h3>Kriptografiya</h3>
-        <p>Zamonaviy shifrlash algoritmlarini tushunish va ularning zaif tomonlarini aniqlash.</p>
-        <span class="feature-tag">Tez kunda</span>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">📡</div>
-        <h3>Tarmoq Xavfsizligi</h3>
-        <p>Tarmoq protokollarini tahlil qilish, sniffing va man-in-the-middle hujumlarini o'rganish.</p>
-        <span class="feature-tag">Aktiv</span>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🏆</div>
-        <h3>CTF Musobaqalar</h3>
-        <p>Haftalik CTF (Capture The Flag) musobaqalarida qatnashing va reytingda yuqoriga ko'tariling.</p>
-        <span class="feature-tag">Haftalik</span>
-      </div>
+    <div class="stats-bar">
+      <div class="stat"><span class="stat-n" data-target="127">0</span><span class="stat-l">Ro'yxatda</span></div>
+      <div class="stat"><span class="stat-n" data-target="100">0</span><span class="stat-l">Laboratoriyalar</span></div>
+      <div class="stat"><span class="stat-n" data-target="5">0</span><span class="stat-l">O'rganish yo'llari</span></div>
     </div>
   </div>
-</section>
 
-<!-- TERMINAL SECTION -->
-<section id="labs" style="background:rgba(0,8,0,0.5)">
-  <div class="terminal-section reveal">
-    <div>
-      <span class="section-label">Laboratoriyalar</span>
-      <h2 class="section-title">Haqiqiy <span class="g">Muhit</span></h2>
-      <p class="section-desc">Barcha laboratoriyalar Docker konteynerlarda ishlaydi. Hech narsa o'rnatmasdan brauzerdan turib hujum va mudofaa texnikalarini mashq qiling.</p>
-      <div style="display:flex;flex-direction:column;gap:12px;margin-top:30px">
-        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
-          <span style="color:var(--matrix-green);font-size:18px">✓</span> Docker-asosli izolyatsiya
+  <!-- FEATURES -->
+  <section class="sec" id="features">
+    <div class="wrap">
+      <span class="sec-label">Xususiyatlar</span>
+      <h2 class="sec-title">Nima beradi <span class="g">MatrixSec</span>?</h2>
+      <p class="sec-desc">Professional kiberxavfsizlik mutaxassislarini tayyorlash uchun maxsus ishlab chiqilgan platforma.</p>
+      <div class="grid-3">
+        <div class="card"><div class="feat-icon">⚔</div><div class="card-title">Penetration Testing</div><div class="card-desc">Real tizimlarni buzish texnikalarini o'rganing. SQLi, XSS, SSRF va boshqa hujum vektorlarini amalda sinab ko'ring.</div><br><span class="tag tag-g">Aktiv</span></div>
+        <div class="card"><div class="feat-icon">🔬</div><div class="card-title">Malware Tahlili</div><div class="card-desc">Zararli dasturlarni xavfsiz sandbox muhitida o'rganing. Reverse engineering va forensics ko'nikmalarini rivojlantiring.</div><br><span class="tag tag-g">Aktiv</span></div>
+        <div class="card"><div class="feat-icon">🌐</div><div class="card-title">Web Xavfsizligi</div><div class="card-desc">OWASP Top 10 zaifliklarini topish va bartaraf etishni o'rganing. Bug bounty uchun tayyor bo'ling.</div><br><span class="tag tag-g">Aktiv</span></div>
+        <div class="card"><div class="feat-icon">🔐</div><div class="card-title">Kriptografiya</div><div class="card-desc">Zamonaviy shifrlash algoritmlarini tushunish va ularning zaif tomonlarini aniqlash.</div><br><span class="tag tag-y">Tez kunda</span></div>
+        <div class="card"><div class="feat-icon">📡</div><div class="card-title">Tarmoq Xavfsizligi</div><div class="card-desc">Tarmoq protokollarini tahlil qilish, sniffing va MITM hujumlarini o'rganish.</div><br><span class="tag tag-g">Aktiv</span></div>
+        <div class="card"><div class="feat-icon">🏆</div><div class="card-title">CTF Musobaqalar</div><div class="card-desc">Haftalik CTF musobaqalarida qatnashing va reytingda yuqoriga ko'tariling.</div><br><span class="tag tag-g">Haftalik</span></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="div-g"></div>
+
+  <!-- TERMINAL SECTION -->
+  <section class="sec">
+    <div class="wrap">
+      <div class="grid-2" style="align-items:center;gap:60px">
+        <div>
+          <span class="sec-label">Laboratoriyalar</span>
+          <h2 class="sec-title">Haqiqiy <span class="g">Muhit</span></h2>
+          <p class="sec-desc">Docker konteynerlarda ishlaydigan laboratoriyalar. Hech narsa o'rnatmasdan brauzerdan turib mashq qiling.</p>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;align-items:center;gap:12px;color:var(--td);font-size:14px"><span style="color:var(--g)">✓</span>Docker-asosli izolyatsiya</div>
+            <div style="display:flex;align-items:center;gap:12px;color:var(--td);font-size:14px"><span style="color:var(--g)">✓</span>Brauzerdan to'g'ridan-to'g'ri kirish</div>
+            <div style="display:flex;align-items:center;gap:12px;color:var(--td);font-size:14px"><span style="color:var(--g)">✓</span>Avtomatik flag tekshirish</div>
+            <div style="display:flex;align-items:center;gap:12px;color:var(--td);font-size:14px"><span style="color:var(--g)">✓</span>100+ amaliy laboratoriya</div>
+          </div>
+          <br>
+          <button class="btn btn-g" onclick="goPage('labs')">Laboratoriyalarni ko'rish →</button>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
-          <span style="color:var(--matrix-green);font-size:18px">✓</span> Brauzerdan to'g'ridan-to'g'ri kirish
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
-          <span style="color:var(--matrix-green);font-size:18px">✓</span> Avtomatik tekshirish tizimi
-        </div>
-        <div style="display:flex;align-items:center;gap:12px;color:var(--text-dim);font-size:14px">
-          <span style="color:var(--matrix-green);font-size:18px">✓</span> 100+ amaliy laboratoriya
+        <div class="term-win">
+          <div class="term-bar"><div class="td td1"></div><div class="td td2"></div><div class="td td3"></div><span class="term-title-bar">matrixsec@kali:~$</span></div>
+          <div class="term-body">
+            <span style="display:block"><span class="tp">root@matrix:~$ </span><span class="tc">nmap -sV 10.0.0.1</span></span>
+            <span style="display:block" class="to">Starting Nmap 7.94 ...</span>
+            <span style="display:block" class="to">PORT     STATE SERVICE</span>
+            <span style="display:block" class="tw2">22/tcp   open  ssh</span>
+            <span style="display:block" class="tw2">80/tcp   open  http</span>
+            <span style="display:block" class="te">3306/tcp open  mysql ⚠</span>
+            <span style="display:block">&nbsp;</span>
+            <span style="display:block"><span class="tp">root@matrix:~$ </span><span class="tc">sqlmap -u "http://10.0.0.1/login"</span></span>
+            <span style="display:block" class="to">Testing target URL...</span>
+            <span style="display:block" class="ts">[+] Parameter 'id' is vulnerable!</span>
+            <span style="display:block" class="ts">[+] Database: users_db</span>
+            <span style="display:block">&nbsp;</span>
+            <span style="display:block"><span class="tp">root@matrix:~$ </span><span class="tcur"></span></span>
+          </div>
         </div>
       </div>
     </div>
-    <div class="terminal-window">
-      <div class="terminal-bar">
-        <div class="t-dot"></div>
-        <div class="t-dot"></div>
-        <div class="t-dot"></div>
-        <span class="terminal-title">matrixsec@kali:~$</span>
-      </div>
-      <div class="terminal-body" id="terminal">
-        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cmd">nmap -sV 10.0.0.1</span></span>
-        <span class="t-line t-out">Starting Nmap 7.94 ...</span>
-        <span class="t-line t-out">PORT     STATE SERVICE VERSION</span>
-        <span class="t-line t-warn">22/tcp   open  ssh     OpenSSH 7.4</span>
-        <span class="t-line t-warn">80/tcp   open  http    Apache 2.4.6</span>
-        <span class="t-line t-err">3306/tcp open  mysql   MySQL 5.6 ⚠</span>
-        <span class="t-line">&nbsp;</span>
-        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cmd">sqlmap -u "http://10.0.0.1/login"</span></span>
-        <span class="t-line t-out">Testing connection to target URL...</span>
-        <span class="t-line t-success">[+] Parameter 'id' is vulnerable!</span>
-        <span class="t-line t-success">[+] Database: users_db found</span>
-        <span class="t-line">&nbsp;</span>
-        <span class="t-line"><span class="t-prompt">root@matrix:~$ </span><span class="t-cursor"></span></span>
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
 
-<!-- HOW IT WORKS -->
-<section id="how" class="how-section">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="reveal" style="text-align:center">
-      <span class="section-label">Qanday ishlaydi</span>
-      <h2 class="section-title" style="text-align:center">4 <span class="g">qadamda</span> boshlang</h2>
-    </div>
-    <div class="steps reveal">
-      <div class="step">
-        <div class="step-num">01</div>
-        <h4>Ro'yxatdan o'ting</h4>
-        <p>Platformaga ro'yxatdan o'ting va o'zingizga mos o'rganish yo'lini tanlang.</p>
+  <!-- HOW IT WORKS -->
+  <section class="sec" id="how" style="background:rgba(0,8,0,.4)">
+    <div class="wrap">
+      <div style="text-align:center">
+        <span class="sec-label">Qanday ishlaydi</span>
+        <h2 class="sec-title" style="text-align:center">4 <span class="g">qadamda</span> boshlang</h2>
       </div>
-      <div class="step">
-        <div class="step-num">02</div>
-        <h4>Laboratoriyani yoqing</h4>
-        <p>Bir tugma bilan virtual muhit tayyor. Hech qanday sozlash talab etilmaydi.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">03</div>
-        <h4>Hujum qiling</h4>
-        <p>Real zaifliklarni toping, ekspluatatsiya qiling va flag'larni toping.</p>
-      </div>
-      <div class="step">
-        <div class="step-num">04</div>
-        <h4>Sertifikat oling</h4>
-        <p>Yo'lni tugating, sertifikat oling va ish beruvchilarga ko'rsating.</p>
+      <br><br>
+      <div class="grid-4" style="text-align:center">
+        <div style="padding:20px"><div style="width:70px;height:70px;border:2px solid var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);margin:0 auto 20px;box-shadow:0 0 20px rgba(0,255,65,.2)">01</div><h4 style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:10px;letter-spacing:1px">Ro'yxatdan o'ting</h4><p style="color:var(--td);font-size:13px;line-height:1.7">Platformaga kiring va o'zingizga mos yo'lni tanlang.</p></div>
+        <div style="padding:20px"><div style="width:70px;height:70px;border:2px solid var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);margin:0 auto 20px;box-shadow:0 0 20px rgba(0,255,65,.2)">02</div><h4 style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:10px;letter-spacing:1px">Laboratoriyani yoqing</h4><p style="color:var(--td);font-size:13px;line-height:1.7">Bir tugma bilan virtual muhit tayyor bo'ladi.</p></div>
+        <div style="padding:20px"><div style="width:70px;height:70px;border:2px solid var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);margin:0 auto 20px;box-shadow:0 0 20px rgba(0,255,65,.2)">03</div><h4 style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:10px;letter-spacing:1px">Hujum qiling</h4><p style="color:var(--td);font-size:13px;line-height:1.7">Zaifliklarni toping, ekspluatatsiya qiling.</p></div>
+        <div style="padding:20px"><div style="width:70px;height:70px;border:2px solid var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);text-shadow:0 0 15px var(--g);margin:0 auto 20px;box-shadow:0 0 20px rgba(0,255,65,.2)">04</div><h4 style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:10px;letter-spacing:1px">Sertifikat oling</h4><p style="color:var(--td);font-size:13px;line-height:1.7">Yo'lni tugating va sertifikat oling.</p></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- PRICING -->
-<section id="pricing">
-  <div style="max-width:1200px;margin:0 auto">
-    <div class="reveal">
-      <span class="section-label">Narxlar</span>
-      <h2 class="section-title">O'zingizga mos <span class="g">rejani</span> tanlang</h2>
-    </div>
-    <div class="pricing-grid reveal">
-      <div class="price-card">
-        <div class="price-name">Starter</div>
-        <div class="price-amount">Bepul<span></span></div>
-        <div class="price-period">Doimo bepul</div>
-        <ul class="price-features">
-          <li>5 ta asosiy laboratoriya</li>
-          <li>Kiberxavfsizlik kirish kursi</li>
-          <li>Jamiyat forumi</li>
-          <li>Asosiy CTF musobaqalar</li>
-        </ul>
-        <a href="#" class="btn-plan">BOSHLASH</a>
-      </div>
-      <div class="price-card featured">
-        <div class="price-name">Pro</div>
-        <div class="price-amount">99<span>000 so'm</span></div>
-        <div class="price-period">/ oyiga</div>
-        <ul class="price-features">
-          <li>100+ laboratoriya to'liq kirish</li>
-          <li>Barcha 5 o'rganish yo'li</li>
-          <li>Haftalik CTF musobaqalar</li>
-          <li>Sertifikat imkoniyati</li>
-          <li>Ustoz bilan seans</li>
-        </ul>
-        <a href="#" class="btn-plan">PRO BOSHLASH</a>
-      </div>
-      <div class="price-card">
-        <div class="price-name">Team</div>
-        <div class="price-amount">490<span>000 so'm</span></div>
-        <div class="price-period">/ oyiga (5 kishi)</div>
-        <ul class="price-features">
-          <li>Barcha Pro imkoniyatlar</li>
-          <li>5 ta jamoaviy litsenziya</li>
-          <li>Maxsus jamoa reyting tizimi</li>
-          <li>Korporativ laboratoriyalar</li>
-          <li>Dedicated qo'llab-quvvatlash</li>
-        </ul>
-        <a href="#" class="btn-plan">JAMOA REJASI</a>
+  <!-- PRICING -->
+  <section class="sec" id="pricing">
+    <div class="wrap">
+      <span class="sec-label">Narxlar</span>
+      <h2 class="sec-title">O'zingizga mos <span class="g">rejani</span> tanlang</h2>
+      <div class="payment-grid">
+        <div class="price-card"><div class="price-name">Starter</div><div class="price-amt">Bepul</div><div class="price-per">Doimo bepul</div><ul class="price-feats"><li>5 ta asosiy laboratoriya</li><li>Kirish kursi</li><li>Jamiyat forumi</li><li>Asosiy CTF</li></ul><button class="btn btn-o btn-full" onclick="goPage('register')">BOSHLASH</button></div>
+        <div class="price-card featured"><div class="price-name">Pro</div><div class="price-amt">99<span>000 so'm</span></div><div class="price-per">/ oyiga</div><ul class="price-feats"><li>100+ laboratoriya</li><li>Barcha 5 yo'l</li><li>Haftalik CTF</li><li>Sertifikat</li><li>Ustoz seansi</li></ul><button class="btn btn-g btn-full" onclick="goPage('payment')">PRO BOSHLASH</button></div>
+        <div class="price-card"><div class="price-name">Team</div><div class="price-amt">490<span>000 so'm</span></div><div class="price-per">/ oyiga (5 kishi)</div><ul class="price-feats"><li>Barcha Pro imkoniyatlar</li><li>5 ta litsenziya</li><li>Jamoa reyting</li><li>Korporativ lab</li><li>Dedicated support</li></ul><button class="btn btn-o btn-full" onclick="goPage('payment')">JAMOA REJASI</button></div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- CTA SECTION -->
-<section style="text-align:center;padding:80px 60px">
-  <div class="reveal" style="max-width:700px;margin:0 auto">
-    <span class="section-label">Tayyor bo'ldingizmi?</span>
-    <h2 class="section-title" style="text-align:center">Kiberxavfsizlik<br><span class="g">kelajagi siz</span></h2>
-    <p style="color:var(--text-dim);font-size:17px;line-height:1.8;margin-bottom:40px">Hoziroq qo'shiling va erta kirish imtiyozlaridan foydalaning. Birinchi 200 foydalanuvchi uchun maxsus chegirmalar.</p>
-    <a href="#" class="btn-primary" style="display:inline-block;font-size:15px;padding:18px 50px">⚡ ERTA KIRISH HUQUQINI OLING</a>
-  </div>
-</section>
+  <!-- CTA -->
+  <section class="sec" style="text-align:center">
+    <div class="wrap" style="max-width:660px;margin:0 auto">
+      <span class="sec-label">Tayyor bo'ldingizmi?</span>
+      <h2 class="sec-title" style="text-align:center">Kiberxavfsizlik<br><span class="g">kelajagi siz</span></h2>
+      <p style="color:var(--td);font-size:16px;line-height:1.8;margin-bottom:36px">Hoziroq qo'shiling. Birinchi 200 foydalanuvchi uchun maxsus chegirmalar.</p>
+      <button class="btn btn-g" onclick="goPage('register')" style="font-size:14px;padding:16px 44px">⚡ ERTA KIRISH HUQUQI</button>
+    </div>
+  </section>
 
-<!-- FOOTER -->
-<footer>
-  <div class="footer-grid">
-    <div class="footer-brand">
-      <span class="logo-text">MATRIX<span style="color:var(--red-accent)">SEC</span></span>
-      <p>Kiberxavfsizlik bo'yicha o'qitishning yangi avlodi. Haqiqiy muhit, haqiqiy ko'nikmalar.</p>
+  <!-- FOOTER -->
+  <footer style="border-top:1px solid var(--border);padding:50px;background:rgba(0,5,0,.95);position:relative;z-index:2">
+    <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:50px;margin-bottom:40px">
+      <div>
+        <div style="font-family:var(--font-head);font-size:20px;font-weight:900;color:var(--g);letter-spacing:3px;margin-bottom:14px">MATRIX<span style="color:var(--r)">SEC</span></div>
+        <p style="color:var(--td);font-size:13px;line-height:1.8;max-width:260px">Kiberxavfsizlik bo'yicha o'qitishning yangi avlodi. Haqiqiy muhit, haqiqiy ko'nikmalar.</p>
+      </div>
+      <div><h5 style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--g);text-transform:uppercase;margin-bottom:16px">Platforma</h5><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Laboratoriyalar</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">O'rganish yo'llari</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">CTF</a></div>
+      <div><h5 style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--g);text-transform:uppercase;margin-bottom:16px">Kompaniya</h5><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Biz haqimizda</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Blog</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Karyera</a></div>
+      <div><h5 style="font-family:var(--font-mono);font-size:10px;letter-spacing:3px;color:var(--g);text-transform:uppercase;margin-bottom:16px">Yordam</h5><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Hujjatlar</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Discord</a><a style="display:block;color:var(--td);text-decoration:none;font-size:13px;padding:4px 0" href="#">Aloqa</a></div>
     </div>
-    <div class="footer-col">
-      <h5>Platforma</h5>
-      <a href="#">Laboratoriyalar</a>
-      <a href="#">O'rganish yo'llari</a>
-      <a href="#">CTF Musobaqalar</a>
-      <a href="#">Sertifikatlar</a>
+    <div style="border-top:1px solid var(--border);padding-top:24px;display:flex;justify-content:space-between;align-items:center">
+      <p style="font-family:var(--font-mono);font-size:10px;color:var(--td)">© 2025 <span style="color:var(--g)">MatrixSec</span>. Barcha huquqlar himoyalangan.</p>
+      <p style="font-family:var(--font-mono);font-size:10px;color:var(--td)">Faqat <span style="color:var(--g)">ta'lim maqsadida</span></p>
     </div>
-    <div class="footer-col">
-      <h5>Kompaniya</h5>
-      <a href="#">Biz haqimizda</a>
-      <a href="#">Blog</a>
-      <a href="#">Karyera</a>
-      <a href="#">Hamkorlik</a>
-    </div>
-    <div class="footer-col">
-      <h5>Yordam</h5>
-      <a href="#">Hujjatlar</a>
-      <a href="#">Jamiyat</a>
-      <a href="#">Discord</a>
-      <a href="#">Aloqa</a>
+  </footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: LOGIN
+═══════════════════════════════════════ -->
+<div class="page" id="page-login">
+  <div class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);letter-spacing:3px">MATRIX<span style="color:var(--r)">SEC</span></div>
+      </div>
+      <div style="text-align:center;margin-bottom:28px">
+        <div class="auth-title">Tizimga kirish</div>
+        <div class="auth-sub">Akkauntingizga kiring</div>
+      </div>
+      <div id="login-error" style="display:none;color:var(--r);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;margin-bottom:16px;padding:10px;border:1px solid rgba(255,42,42,.3);background:rgba(255,42,42,.05)"></div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="login-email" class="form-input" type="email" placeholder="sizning@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parol</label>
+        <input id="login-pass" class="form-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <button class="btn btn-g btn-full" id="login-btn" onclick="doLogin()">KIRISH</button>
+      <div class="auth-switch">Akkauntingiz yo'qmi? <a href="#" onclick="goPage('register');return false">Ro'yxatdan o'ting</a></div>
     </div>
   </div>
-  <div class="footer-bottom">
-    <p>© 2025 <span>MatrixSec</span>. Barcha huquqlar himoyalangan.</p>
-    <p style="font-size:10px">Faqat <span>ta'lim maqsadida</span> ishlatish uchun</p>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: REGISTER
+═══════════════════════════════════════ -->
+<div class="page" id="page-register">
+  <div class="auth-page">
+    <div class="auth-box">
+      <div class="auth-logo">
+        <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--g);letter-spacing:3px">MATRIX<span style="color:var(--r)">SEC</span></div>
+      </div>
+      <div style="text-align:center;margin-bottom:28px">
+        <div class="auth-title">Ro'yxatdan o'tish</div>
+        <div class="auth-sub">Yangi akkaunt yarating</div>
+      </div>
+      <div id="reg-error" style="display:none;color:var(--r);font-family:var(--font-mono);font-size:11px;letter-spacing:1px;margin-bottom:16px;padding:10px;border:1px solid rgba(255,42,42,.3);background:rgba(255,42,42,.05)"></div>
+      <div class="form-group">
+        <label class="form-label">Username</label>
+        <input id="reg-username" class="form-input" type="text" placeholder="hacker_uz">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input id="reg-email" class="form-input" type="email" placeholder="sizning@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">To'liq ism (ixtiyoriy)</label>
+        <input id="reg-name" class="form-input" type="text" placeholder="Ism Familiya">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parol</label>
+        <input id="reg-pass" class="form-input" type="password" placeholder="Kamida 8 ta belgi" onkeydown="if(event.key==='Enter')doRegister()">
+      </div>
+      <button class="btn btn-g btn-full" id="reg-btn" onclick="doRegister()">RO'YXATDAN O'TISH</button>
+      <div class="auth-switch">Akkauntingiz bormi? <a href="#" onclick="goPage('login');return false">Kiring</a></div>
+    </div>
   </div>
-</footer>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: DASHBOARD
+═══════════════════════════════════════ -->
+<div class="page" id="page-dashboard">
+  <div class="dash-layout">
+    <div class="sidebar">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sb-avatar">M</div>
+        <div class="sidebar-name" id="sb-name">Yuklanmoqda...</div>
+        <div class="sidebar-plan" id="sb-plan">FREE</div>
+        <div class="sidebar-pts" id="sb-pts">⚡ 0 ball</div>
+      </div>
+      <ul class="sidebar-nav">
+        <li><a href="#" class="active" onclick="showDashSection('overview');return false"><span class="icon">⊞</span>Dashboard</a></li>
+        <li><a href="#" onclick="goPage('labs');return false"><span class="icon">🔬</span>Laboratoriyalar</a></li>
+        <li><a href="#" onclick="showDashSection('progress');return false"><span class="icon">📊</span>Progress</a></li>
+        <li><a href="#" onclick="goPage('leaderboard');return false"><span class="icon">🏆</span>Reyting</a></li>
+        <li><a href="#" onclick="goPage('payment');return false"><span class="icon">💳</span>Pro reja</a></li>
+        <li><a href="#" onclick="showDashSection('profile');return false"><span class="icon">👤</span>Profil</a></li>
+        <li id="admin-nav-item" style="display:none"><a href="#" onclick="goPage('admin');return false"><span class="icon">🛡</span>Admin Panel</a></li>
+      </ul>
+      <div class="sidebar-bot">
+        <button class="btn btn-o btn-sm btn-full" onclick="logout()">Chiqish</button>
+      </div>
+    </div>
+    <div class="dash-main">
+
+      <!-- OVERVIEW -->
+      <div id="dash-overview">
+        <div class="dash-header">
+          <div class="dash-title">Dashboard</div>
+          <div class="dash-subtitle" id="dash-welcome">Xush kelibsiz!</div>
+        </div>
+        <div class="stat-cards">
+          <div class="stat-card"><div class="sc-icon">⚡</div><div class="sc-val" id="d-pts">0</div><div class="sc-lbl">Ball</div></div>
+          <div class="stat-card"><div class="sc-icon">✅</div><div class="sc-val" id="d-solved">0</div><div class="sc-lbl">Yechilgan</div></div>
+          <div class="stat-card"><div class="sc-icon">🔬</div><div class="sc-val" id="d-total">0</div><div class="sc-lbl">Jami Lab</div></div>
+          <div class="stat-card"><div class="sc-icon">🏅</div><div class="sc-val" id="d-rank">#--</div><div class="sc-lbl">Reyting</div></div>
+        </div>
+        <div class="grid-2" style="gap:24px">
+          <div>
+            <div class="card-title" style="margin-bottom:16px;font-family:var(--font-head);font-size:14px;color:var(--tw);letter-spacing:1px">So'nggi hal qilingan lablar</div>
+            <div id="recent-solved">
+              <div style="color:var(--td);font-family:var(--font-mono);font-size:12px;padding:20px 0">Hali hech qanday lab hal qilinmagan</div>
+            </div>
+          </div>
+          <div>
+            <div class="card-title" style="margin-bottom:16px;font-family:var(--font-head);font-size:14px;color:var(--tw);letter-spacing:1px">Umumiy progress</div>
+            <div style="color:var(--td);font-family:var(--font-mono);font-size:12px;margin-bottom:8px">Hal qilingan lablar</div>
+            <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+            <div style="color:var(--td);font-family:var(--font-mono);font-size:11px;margin-top:6px"><span id="prog-txt">0 / 0</span></div>
+            <br>
+            <button class="btn btn-g btn-sm" onclick="goPage('labs')">Laboratoriyalarga o'tish →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROGRESS -->
+      <div id="dash-progress" style="display:none">
+        <div class="dash-header"><div class="dash-title">Mening Progressim</div></div>
+        <div id="progress-list">
+          <div style="color:var(--td);font-family:var(--font-mono);font-size:12px">Yuklanmoqda...</div>
+        </div>
+      </div>
+
+      <!-- PROFILE -->
+      <div id="dash-profile" style="display:none">
+        <div class="dash-header"><div class="dash-title">Profil</div></div>
+        <div class="profile-header">
+          <div class="profile-avatar-big" id="prof-avatar">M</div>
+          <div class="profile-info">
+            <div class="name" id="prof-name">...</div>
+            <div class="meta" id="prof-meta">...</div>
+          </div>
+        </div>
+        <div class="grid-2" style="gap:24px">
+          <div>
+            <div style="font-family:var(--font-head);font-size:14px;color:var(--tw);margin-bottom:16px;letter-spacing:1px">Profilni tahrirlash</div>
+            <div class="form-group"><label class="form-label">To'liq ism</label><input id="edit-name" class="form-input" type="text"></div>
+            <button class="btn btn-g btn-sm" onclick="updateProfile()">SAQLASH</button>
+          </div>
+          <div>
+            <div style="font-family:var(--font-head);font-size:14px;color:var(--tw);margin-bottom:16px;letter-spacing:1px">Parol o'zgartirish</div>
+            <div class="form-group"><label class="form-label">Eski parol</label><input id="old-pass" class="form-input" type="password"></div>
+            <div class="form-group"><label class="form-label">Yangi parol</label><input id="new-pass" class="form-input" type="password"></div>
+            <button class="btn btn-o btn-sm" onclick="changePassword()">PAROL O'ZGARTIRISH</button>
+          </div>
+        </div>
+        <br>
+        <div style="font-family:var(--font-head);font-size:14px;color:var(--tw);margin-bottom:16px;letter-spacing:1px">Yutuqlar</div>
+        <div id="achievements">
+          <div class="achievement"><div class="ach-icon">🎯</div><div><div class="ach-name">BIRINCHI QADAM</div><div class="ach-desc">Birinchi labni hal qildi</div></div></div>
+          <div class="achievement"><div class="ach-icon">⚡</div><div><div class="ach-name">MATRIX YANGI BOSHI</div><div class="ach-desc">Ro'yxatdan o'tdi</div></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: LABS
+═══════════════════════════════════════ -->
+<div class="page" id="page-labs">
+  <div style="padding:90px 0 40px;position:relative;z-index:2">
+    <div class="wrap">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:30px;flex-wrap:wrap;gap:16px">
+        <div>
+          <span class="sec-label">Laboratoriyalar</span>
+          <h2 class="sec-title" style="margin-bottom:0">Barcha <span class="g">Laboratoriyalar</span></h2>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <select id="filter-cat" class="form-select" style="width:150px" onchange="filterLabs()">
+            <option value="">Barcha kategoriya</option>
+            <option value="web">Web</option>
+            <option value="network">Tarmoq</option>
+            <option value="malware">Malware</option>
+            <option value="crypto">Kriptografiya</option>
+            <option value="pentest">Pentest</option>
+            <option value="ctf">CTF</option>
+          </select>
+          <select id="filter-diff" class="form-select" style="width:150px" onchange="filterLabs()">
+            <option value="">Barcha qiyinlik</option>
+            <option value="easy">Oson</option>
+            <option value="medium">O'rta</option>
+            <option value="hard">Qiyin</option>
+            <option value="insane">Insane</option>
+          </select>
+          <input id="filter-search" class="form-input" style="width:200px" placeholder="Qidirish..." oninput="filterLabs()">
+        </div>
+      </div>
+      <div id="labs-grid" class="lab-grid">
+        <div style="color:var(--td);font-family:var(--font-mono);font-size:12px;padding:40px 0">
+          <div class="loader"></div> &nbsp; Laboratoriyalar yuklanmoqda...
+        </div>
+      </div>
+      <div id="labs-pagination" style="display:flex;gap:10px;margin-top:30px;justify-content:center"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: LAB DETAIL
+═══════════════════════════════════════ -->
+<div class="page" id="page-lab-detail">
+  <div style="padding:90px 0 40px;position:relative;z-index:2">
+    <div class="wrap" style="max-width:900px">
+      <button class="btn btn-o btn-sm" style="margin-bottom:24px" onclick="goPage('labs')">← Orqaga</button>
+      <div id="lab-detail-content">
+        <div style="color:var(--td);font-family:var(--font-mono);font-size:12px"><div class="loader"></div> Yuklanmoqda...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: LEADERBOARD
+═══════════════════════════════════════ -->
+<div class="page" id="page-leaderboard">
+  <div class="sec" style="position:relative;z-index:2">
+    <div class="wrap" style="max-width:760px">
+      <span class="sec-label">Reyting</span>
+      <h2 class="sec-title">Top <span class="g">Hackerlar</span></h2>
+      <div id="leaderboard-list" style="margin-top:30px">
+        <div style="color:var(--td);font-family:var(--font-mono);font-size:12px"><div class="loader"></div> Yuklanmoqda...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: PAYMENT
+═══════════════════════════════════════ -->
+<div class="page" id="page-payment">
+  <div class="sec" style="position:relative;z-index:2">
+    <div class="wrap">
+      <span class="sec-label">To'lov</span>
+      <h2 class="sec-title">Pro <span class="g">Rejasini</span> Faollashtirish</h2>
+      <p class="sec-desc">Barcha laboratoriyalar va funksiyalarga to'liq kirish huquqini oling.</p>
+      <div class="payment-grid" style="margin-bottom:40px">
+        <div class="price-card"><div class="price-name">Starter</div><div class="price-amt">Bepul</div><div class="price-per">Doimo bepul</div><ul class="price-feats"><li>5 ta asosiy lab</li><li>Kirish kursi</li><li>Jamiyat</li></ul><button class="btn btn-o btn-full" disabled style="opacity:.5">Joriy reja</button></div>
+        <div class="price-card featured"><div class="price-name">Pro</div><div class="price-amt">99<span>000 so'm</span></div><div class="price-per">/ oyiga</div><ul class="price-feats"><li>100+ laboratoriya</li><li>Barcha yo'llar</li><li>Sertifikat</li><li>Ustoz seansi</li></ul>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+            <button class="btn btn-g btn-full" onclick="startPayment('pro','payme')">PAYME ORQALI TO'LASH</button>
+            <button class="btn btn-o btn-full" onclick="startPayment('pro','click')">CLICK ORQALI TO'LASH</button>
+          </div>
+        </div>
+        <div class="price-card"><div class="price-name">Team</div><div class="price-amt">490<span>000 so'm</span></div><div class="price-per">/ oyiga (5 kishi)</div><ul class="price-feats"><li>5 ta litsenziya</li><li>Jamoa reyting</li><li>Dedicated support</li></ul>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px">
+            <button class="btn btn-g btn-full" onclick="startPayment('team','payme')">PAYME ORQALI TO'LASH</button>
+            <button class="btn btn-o btn-full" onclick="startPayment('team','click')">CLICK ORQALI TO'LASH</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border);padding:24px">
+        <div style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:16px;letter-spacing:1px">To'lovlar Tarixi</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Reja</th><th>Summa</th><th>Tizim</th><th>Status</th><th>Sana</th></tr></thead>
+            <tbody id="payment-history"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE: ADMIN
+═══════════════════════════════════════ -->
+<div class="page" id="page-admin">
+  <div style="padding:90px 0 40px;position:relative;z-index:2">
+    <div class="wrap">
+      <span class="sec-label">Admin Panel</span>
+      <h2 class="sec-title">Boshqaruv <span class="g">Paneli</span></h2>
+
+      <!-- Stats -->
+      <div class="stat-cards" style="margin-bottom:30px">
+        <div class="stat-card"><div class="sc-icon">👥</div><div class="sc-val" id="a-users">--</div><div class="sc-lbl">Foydalanuvchilar</div></div>
+        <div class="stat-card"><div class="sc-icon">🔬</div><div class="sc-val" id="a-labs">--</div><div class="sc-lbl">Laboratoriyalar</div></div>
+        <div class="stat-card"><div class="sc-icon">💰</div><div class="sc-val" id="a-rev">--</div><div class="sc-lbl">Daromad (so'm)</div></div>
+        <div class="stat-card"><div class="sc-icon">📈</div><div class="sc-val" id="a-new">--</div><div class="sc-lbl">Yangi (7 kun)</div></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="adminTab('users')">Foydalanuvchilar</button>
+        <button class="admin-tab" onclick="adminTab('labs')">Laboratoriyalar</button>
+        <button class="admin-tab" onclick="adminTab('payments')">To'lovlar</button>
+        <button class="admin-tab" onclick="adminTab('create-lab')">Lab yaratish</button>
+      </div>
+
+      <!-- Users -->
+      <div class="admin-panel active" id="ap-users">
+        <div style="display:flex;justify-content:space-between;margin-bottom:16px;align-items:center">
+          <input class="form-input" style="width:260px" placeholder="Qidirish..." id="user-search" oninput="loadAdminUsers()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Reja</th><th>Rol</th><th>Holat</th><th>Amal</th></tr></thead>
+            <tbody id="admin-users-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Labs -->
+      <div class="admin-panel" id="ap-labs">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>Nomi</th><th>Kategoriya</th><th>Qiyinlik</th><th>Premium</th><th>Hal qilingan</th><th>Amal</th></tr></thead>
+            <tbody id="admin-labs-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Payments -->
+      <div class="admin-panel" id="ap-payments">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>User</th><th>Reja</th><th>Summa</th><th>Tizim</th><th>Status</th><th>Amal</th></tr></thead>
+            <tbody id="admin-payments-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Create Lab -->
+      <div class="admin-panel" id="ap-create-lab">
+        <div style="max-width:620px">
+          <div class="grid-2" style="gap:16px">
+            <div class="form-group"><label class="form-label">Nomi</label><input id="cl-title" class="form-input" type="text" placeholder="SQL Injection Basics"></div>
+            <div class="form-group"><label class="form-label">Slug</label><input id="cl-slug" class="form-input" type="text" placeholder="sql-injection-basics"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Tavsif</label><textarea id="cl-desc" class="form-textarea" placeholder="Lab haqida..."></textarea></div>
+          <div class="grid-2" style="gap:16px">
+            <div class="form-group"><label class="form-label">Kategoriya</label><select id="cl-cat" class="form-select"><option value="web">Web</option><option value="network">Tarmoq</option><option value="malware">Malware</option><option value="crypto">Kriptografiya</option><option value="pentest">Pentest</option><option value="ctf">CTF</option></select></div>
+            <div class="form-group"><label class="form-label">Qiyinlik</label><select id="cl-diff" class="form-select"><option value="easy">Oson</option><option value="medium">O'rta</option><option value="hard">Qiyin</option><option value="insane">Insane</option></select></div>
+          </div>
+          <div class="grid-2" style="gap:16px">
+            <div class="form-group"><label class="form-label">Ball</label><input id="cl-points" class="form-input" type="number" value="10"></div>
+            <div class="form-group"><label class="form-label">Flag (plaintext)</label><input id="cl-flag" class="form-input" type="text" placeholder="FLAG{...}"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Docker image</label><input id="cl-docker" class="form-input" type="text" placeholder="matrixsec/sqli-basic:latest"></div>
+          <div class="form-group"><label class="form-label">Maslahatlar (vergul bilan)</label><input id="cl-hints" class="form-input" type="text" placeholder="1-maslahat, 2-maslahat"></div>
+          <div class="form-group"><label class="form-label">Teglar (vergul bilan)</label><input id="cl-tags" class="form-input" type="text" placeholder="sqli, web, owasp"></div>
+          <div class="form-group" style="display:flex;align-items:center;gap:10px"><input id="cl-premium" type="checkbox"><label class="form-label" style="margin:0;cursor:none">Premium lab</label></div>
+          <button class="btn btn-g" onclick="createLab()">LAB YARATISH</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODALS
+═══════════════════════════════════════ -->
+
+<!-- Lab Start Modal -->
+<div class="modal-bg" id="modal-lab-start">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-lab-start')">✕</button>
+    <div class="modal-title" id="mls-title">Lab boshlash</div>
+    <div id="mls-body">
+      <p style="color:var(--td);font-size:14px;margin-bottom:24px">Docker konteyneri ishga tushirilmoqda. Bu bir necha soniya vaqt oladi.</p>
+      <div id="mls-session-info" style="display:none">
+        <div style="background:var(--s2);border:1px solid var(--border);padding:16px;margin-bottom:16px">
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--td);margin-bottom:6px">KIRISH URL</div>
+          <div id="mls-url" style="font-family:var(--font-mono);font-size:13px;color:var(--g)"></div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:var(--td);margin-top:6px">Muddat: <span id="mls-expires" style="color:var(--tw)"></span></div>
+        </div>
+        <a id="mls-open-btn" class="btn btn-g btn-full" href="#" target="_blank">LABORATORIYANI OCHISH →</a>
+        <br><br>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--td);margin-bottom:10px">FLAG TOPSHIRISH</div>
+        <div class="flag-input-wrap">
+          <input id="flag-input" class="form-input" type="text" placeholder="FLAG{...}">
+          <button class="btn btn-g" onclick="submitFlag()">TOPSHIRISH</button>
+        </div>
+        <div id="flag-result" style="margin-top:12px;font-family:var(--font-mono);font-size:12px"></div>
+      </div>
+      <div id="mls-loading" style="text-align:center;padding:20px">
+        <div class="loader" style="width:30px;height:30px;border-width:3px;margin:0 auto 12px"></div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--td);letter-spacing:2px">KONTEYNER TAYYORLANMOQDA...</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- User Edit Modal -->
+<div class="modal-bg" id="modal-user-edit">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('modal-user-edit')">✕</button>
+    <div class="modal-title">Foydalanuvchini tahrirlash</div>
+    <input type="hidden" id="edit-uid">
+    <div class="form-group"><label class="form-label">Rol</label><select id="edit-role" class="form-select"><option value="user">User</option><option value="admin">Admin</option><option value="superadmin">Superadmin</option></select></div>
+    <div class="form-group"><label class="form-label">Reja</label><select id="edit-plan" class="form-select"><option value="free">Free</option><option value="pro">Pro</option><option value="team">Team</option></select></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px"><input id="edit-active" type="checkbox" checked><label class="form-label" style="margin:0">Aktiv</label></div>
+    <button class="btn btn-g" onclick="saveUserEdit()">SAQLASH</button>
+  </div>
+</div>
 
 <script>
-// CURSOR
-const cursor = document.getElementById('cursor');
-const trail = document.getElementById('cursorTrail');
-let mx = 0, my = 0, tx = 0, ty = 0;
+/* ═══════════════════════════════════════════
+   API CONFIG — Backend URL ni shu yerda o'zgartiring
+═══════════════════════════════════════════ */
+const API = 'http://localhost:8000/api/v1';
 
-document.addEventListener('mousemove', e => {
-  mx = e.clientX; my = e.clientY;
-  cursor.style.left = mx - 6 + 'px';
-  cursor.style.top = my - 6 + 'px';
-});
+/* ═══════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════ */
+let state = {
+  token: localStorage.getItem('mx_token') || null,
+  user: JSON.parse(localStorage.getItem('mx_user') || 'null'),
+  currentLabSlug: null,
+  currentSessionId: null,
+  labsPage: 1,
+  allLabs: [],
+};
 
-function animateTrail() {
-  tx += (mx - tx) * 0.12;
-  ty += (my - ty) * 0.12;
-  trail.style.left = tx - 15 + 'px';
-  trail.style.top = ty - 15 + 'px';
-  requestAnimationFrame(animateTrail);
-}
-animateTrail();
-
-document.querySelectorAll('a, button, .feature-card, .price-card').forEach(el => {
-  el.addEventListener('mouseenter', () => cursor.style.transform = 'scale(2)');
-  el.addEventListener('mouseleave', () => cursor.style.transform = 'scale(1)');
-});
-
-// MATRIX RAIN
-const canvas = document.getElementById('matrixCanvas');
-const ctx = canvas.getContext('2d');
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-window.addEventListener('resize', () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-  init();
-});
-
-const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]|<>/\\アイウエオカキクケコ';
-const fontSize = 14;
-let columns, drops;
-
-function init() {
-  columns = Math.floor(canvas.width / fontSize);
-  drops = new Array(columns).fill(1);
-}
-init();
-
-function drawMatrix() {
-  ctx.fillStyle = 'rgba(0,0,0,0.05)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.font = fontSize + 'px Share Tech Mono';
-  for (let i = 0; i < drops.length; i++) {
-    const char = chars[Math.floor(Math.random() * chars.length)];
-    const brightness = Math.random();
-    if (brightness > 0.95) {
-      ctx.fillStyle = '#ffffff';
-    } else if (brightness > 0.7) {
-      ctx.fillStyle = '#00ff41';
-    } else {
-      ctx.fillStyle = '#008f11';
-    }
-    ctx.fillText(char, i * fontSize, drops[i] * fontSize);
-    if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-    drops[i]++;
+/* ═══════════════════════════════════════════
+   API HELPER
+═══════════════════════════════════════════ */
+async function api(method, path, body = null, auth = true) {
+  const headers = {'Content-Type': 'application/json'};
+  if (auth && state.token) headers['Authorization'] = `Bearer ${state.token}`;
+  try {
+    const res = await fetch(API + path, {
+      method, headers,
+      body: body ? JSON.stringify(body) : null
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || 'Xatolik yuz berdi');
+    return data;
+  } catch(e) {
+    throw e;
   }
 }
-setInterval(drawMatrix, 40);
 
-// COUNTER ANIMATION
-function animateCounter(el) {
-  const target = parseInt(el.dataset.target);
-  let current = 0;
-  const inc = target / 60;
-  const timer = setInterval(() => {
-    current += inc;
-    if (current >= target) { el.textContent = target + (target === 100 ? '+' : ''); clearInterval(timer); }
-    else el.textContent = Math.floor(current) + (target === 100 ? '+' : '');
-  }, 25);
+/* ═══════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════ */
+function toast(msg, type = 'info') {
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.textContent = (type==='success'?'✓ ':type==='error'?'✗ ':'ℹ ') + msg;
+  wrap.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(30px)'; el.style.transition='all .3s'; setTimeout(()=>el.remove(), 300); }, 3500);
 }
 
-// SCROLL REVEAL
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      // trigger counters
-      entry.target.querySelectorAll('[data-target]').forEach(animateCounter);
+/* ═══════════════════════════════════════════
+   PAGE ROUTING
+═══════════════════════════════════════════ */
+function goPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const page = document.getElementById('page-' + name);
+  if (page) { page.classList.add('active'); window.scrollTo(0,0); }
+  // Load data for pages
+  if (name === 'dashboard') loadDashboard();
+  if (name === 'labs') loadLabs();
+  if (name === 'leaderboard') loadLeaderboard();
+  if (name === 'payment') loadPaymentHistory();
+  if (name === 'admin') { checkAdmin(); loadAdminStats(); loadAdminUsers(); loadAdminLabs(); loadAdminPayments(); }
+}
+
+function goSection(id) {
+  goPage('landing');
+  setTimeout(() => { const el = document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth'}); }, 100);
+}
+
+function showDashSection(name) {
+  document.querySelectorAll('[id^="dash-"]').forEach(el => el.style.display = 'none');
+  document.getElementById('dash-'+name).style.display = '';
+  document.querySelectorAll('.sidebar-nav li a').forEach(a => a.classList.remove('active'));
+  if (name === 'profile') loadProfile();
+  if (name === 'progress') loadUserProgress();
+}
+
+/* ═══════════════════════════════════════════
+   NAV UPDATE
+═══════════════════════════════════════════ */
+function updateNav() {
+  if (state.user) {
+    document.getElementById('nav-guest-btns').style.display = 'none';
+    document.getElementById('nav-user-info').style.display = 'flex';
+    document.getElementById('nav-links-guest').style.display = 'none';
+    document.getElementById('nav-links-user').style.display = 'flex';
+    document.getElementById('nav-username').textContent = state.user.username;
+    document.getElementById('nav-plan').textContent = state.user.plan.toUpperCase();
+  } else {
+    document.getElementById('nav-guest-btns').style.display = 'flex';
+    document.getElementById('nav-user-info').style.display = 'none';
+    document.getElementById('nav-links-guest').style.display = 'flex';
+    document.getElementById('nav-links-user').style.display = 'none';
+  }
+}
+
+/* ═══════════════════════════════════════════
+   AUTH
+═══════════════════════════════════════════ */
+async function doLogin() {
+  const email = document.getElementById('login-email').value;
+  const pass = document.getElementById('login-pass').value;
+  const errEl = document.getElementById('login-error');
+  const btn = document.getElementById('login-btn');
+  errEl.style.display = 'none';
+  if (!email || !pass) { errEl.textContent='Email va parolni kiriting'; errEl.style.display='block'; return; }
+  btn.innerHTML = '<div class="loader"></div> KIRISH...'; btn.disabled = true;
+  try {
+    const data = await api('POST', '/auth/login', {email, password: pass}, false);
+    state.token = data.access_token;
+    state.user = data.user;
+    localStorage.setItem('mx_token', data.access_token);
+    localStorage.setItem('mx_user', JSON.stringify(data.user));
+    updateNav();
+    toast('Xush kelibsiz, ' + data.user.username + '!', 'success');
+    goPage('dashboard');
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  }
+  btn.innerHTML = 'KIRISH'; btn.disabled = false;
+}
+
+async function doRegister() {
+  const username = document.getElementById('reg-username').value;
+  const email = document.getElementById('reg-email').value;
+  const full_name = document.getElementById('reg-name').value;
+  const password = document.getElementById('reg-pass').value;
+  const errEl = document.getElementById('reg-error');
+  const btn = document.getElementById('reg-btn');
+  errEl.style.display = 'none';
+  if (!username || !email || !password) { errEl.textContent="Majburiy maydonlarni to'ldiring"; errEl.style.display='block'; return; }
+  btn.innerHTML = '<div class="loader"></div> YUBORILMOQDA...'; btn.disabled = true;
+  try {
+    const data = await api('POST', '/auth/register', {username, email, password, full_name: full_name||undefined}, false);
+    state.token = data.access_token;
+    state.user = data.user;
+    localStorage.setItem('mx_token', data.access_token);
+    localStorage.setItem('mx_user', JSON.stringify(data.user));
+    updateNav();
+    toast('Muvaffaqiyatli ro\'yxatdan o\'tdingiz!', 'success');
+    goPage('dashboard');
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display = 'block';
+  }
+  btn.innerHTML = "RO'YXATDAN O'TISH"; btn.disabled = false;
+}
+
+function logout() {
+  state.token = null; state.user = null;
+  localStorage.removeItem('mx_token'); localStorage.removeItem('mx_user');
+  updateNav(); goPage('landing');
+  toast('Chiqdingiz', 'info');
+}
+
+function requireAuth() {
+  if (!state.user) { toast("Iltimos avval tizimga kiring", 'error'); goPage('login'); return false; }
+  return true;
+}
+
+/* ═══════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════ */
+async function loadDashboard() {
+  if (!requireAuth()) return;
+  try {
+    const data = await api('GET', '/labs/me/stats');
+    document.getElementById('d-pts').textContent = data.points;
+    document.getElementById('d-solved').textContent = data.labs_solved;
+    document.getElementById('d-total').textContent = data.total_labs;
+    document.getElementById('dash-welcome').textContent = 'Xush kelibsiz, ' + data.username + '!';
+    const pct = data.total_labs > 0 ? Math.round(data.labs_solved/data.total_labs*100) : 0;
+    document.getElementById('prog-fill').style.width = pct + '%';
+    document.getElementById('prog-txt').textContent = data.labs_solved + ' / ' + data.total_labs;
+    // Sidebar
+    document.getElementById('sb-name').textContent = state.user.username;
+    document.getElementById('sb-plan').textContent = state.user.plan.toUpperCase();
+    document.getElementById('sb-pts').textContent = '⚡ ' + data.points + ' ball';
+    document.getElementById('sb-avatar').textContent = state.user.username[0].toUpperCase();
+    document.getElementById('d-rank').textContent = '#--';
+    // Show admin nav
+    if (state.user.role === 'admin' || state.user.role === 'superadmin') {
+      document.getElementById('admin-nav-item').style.display = '';
     }
+    // Recent solved
+    const prog = await api('GET', '/labs/me/progress');
+    const solved = prog.filter(p => p.is_solved).slice(0, 5);
+    const recentEl = document.getElementById('recent-solved');
+    if (solved.length === 0) {
+      recentEl.innerHTML = '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px;padding:20px 0">Hali hech qanday lab hal qilinmagan</div>';
+    } else {
+      recentEl.innerHTML = solved.map(s => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--tw)">Lab #${s.lab_id}</span>
+          <span style="font-family:var(--font-mono);font-size:11px;color:var(--g)">+${s.points_earned} ball</span>
+        </div>`).join('');
+    }
+  } catch(e) { toast('Dashboard yuklanmadi: '+e.message, 'error'); }
+}
+
+/* ═══════════════════════════════════════════
+   LABS
+═══════════════════════════════════════════ */
+async function loadLabs() {
+  const grid = document.getElementById('labs-grid');
+  const cat = document.getElementById('filter-cat').value;
+  const diff = document.getElementById('filter-diff').value;
+  const search = document.getElementById('filter-search').value;
+  let query = `?page=${state.labsPage}&limit=12`;
+  if (cat) query += `&category=${cat}`;
+  if (diff) query += `&difficulty=${diff}`;
+  if (search) query += `&search=${search}`;
+  grid.innerHTML = '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px;padding:40px 0"><div class="loader"></div></div>';
+  try {
+    const data = await api('GET', '/labs'+query, null, !!state.token);
+    state.allLabs = data.items;
+    if (data.items.length === 0) {
+      grid.innerHTML = '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px;padding:40px 0">Laboratoriya topilmadi</div>';
+    } else {
+      // Get user progress
+      let solvedIds = new Set();
+      if (state.user) {
+        try {
+          const prog = await api('GET', '/labs/me/progress');
+          prog.filter(p=>p.is_solved).forEach(p=>solvedIds.add(p.lab_id));
+        } catch(e){}
+      }
+      grid.innerHTML = data.items.map(lab => `
+        <div class="lab-card" onclick="openLab('${lab.slug}')">
+          ${solvedIds.has(lab.id) ? '<div class="lab-solved">✅</div>' : ''}
+          <div class="lab-cat">${lab.category} ${lab.is_premium ? '• <span style="color:var(--r)">PRO</span>' : ''}</div>
+          <div class="lab-name">${lab.title}</div>
+          <div class="lab-desc">${(lab.description||'').slice(0,100)}${lab.description&&lab.description.length>100?'...':''}</div>
+          <div class="lab-meta">
+            <span class="tag ${getDiffClass(lab.difficulty)}">${getDiffLabel(lab.difficulty)}</span>
+            <span class="lab-pts">⚡${lab.points} ball</span>
+            <span style="font-family:var(--font-mono);font-size:10px;color:var(--td)">🏳 ${lab.solve_count} ta yechdi</span>
+            ${lab.tags && lab.tags.slice(0,2).map(t=>`<span class="tag tag-g" style="font-size:9px">${t}</span>`).join('')}
+          </div>
+        </div>`).join('');
+    }
+    // Pagination
+    const pagEl = document.getElementById('labs-pagination');
+    pagEl.innerHTML = '';
+    for (let i=1; i<=data.pages; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'btn ' + (i===data.page ? 'btn-g' : 'btn-o') + ' btn-sm';
+      btn.textContent = i;
+      btn.onclick = () => { state.labsPage = i; loadLabs(); };
+      pagEl.appendChild(btn);
+    }
+  } catch(e) {
+    grid.innerHTML = `<div style="color:var(--r);font-family:var(--font-mono);font-size:12px;padding:20px 0">Xatolik: ${e.message}</div>`;
+  }
+}
+
+function filterLabs() { state.labsPage = 1; loadLabs(); }
+
+function getDiffClass(d) { return {easy:'diff-easy',medium:'diff-medium',hard:'diff-hard',insane:'diff-insane'}[d]||''; }
+function getDiffLabel(d) { return {easy:'Oson',medium:"O'rta",hard:'Qiyin',insane:'Insane'}[d]||d; }
+
+async function openLab(slug) {
+  goPage('lab-detail');
+  state.currentLabSlug = slug;
+  const content = document.getElementById('lab-detail-content');
+  content.innerHTML = '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px"><div class="loader"></div> Yuklanmoqda...</div>';
+  if (!requireAuth()) return;
+  try {
+    const lab = await api('GET', '/labs/'+slug);
+    let solvedBadge = '';
+    try {
+      const prog = await api('GET', '/labs/me/progress');
+      const p = prog.find(x => x.lab_id === lab.id);
+      if (p && p.is_solved) solvedBadge = '<span class="tag tag-g" style="font-size:12px">✅ HAL QILINDI</span>';
+    } catch(e){}
+    content.innerHTML = `
+      <div class="card-title" style="font-family:var(--font-mono);font-size:11px;letter-spacing:3px;color:var(--td);margin-bottom:8px">${lab.category.toUpperCase()}</div>
+      <h2 style="font-family:var(--font-head);font-size:32px;font-weight:900;color:var(--tw);margin-bottom:16px">${lab.title}</h2>
+      <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">
+        <span class="tag ${getDiffClass(lab.difficulty)}">${getDiffLabel(lab.difficulty)}</span>
+        <span style="font-family:var(--font-mono);font-size:12px;color:var(--g)">⚡ ${lab.points} ball</span>
+        <span style="font-family:var(--font-mono);font-size:11px;color:var(--td)">🏳 ${lab.solve_count} ta yechdi</span>
+        ${solvedBadge}
+        ${lab.tags && lab.tags.map(t=>`<span class="tag tag-g" style="font-size:10px">${t}</span>`).join('')}
+      </div>
+      <div style="background:var(--s1);border:1px solid var(--border);padding:24px;margin-bottom:24px;color:var(--td);font-size:15px;line-height:1.8">${lab.description||'Tavsif mavjud emas'}</div>
+      ${lab.hints && lab.hints.length ? `
+        <div style="margin-bottom:24px">
+          <div style="font-family:var(--font-head);font-size:13px;color:var(--tw);margin-bottom:12px;letter-spacing:1px">💡 Maslahatlar</div>
+          ${lab.hints.map((h,i)=>`<div style="padding:10px 16px;border:1px solid rgba(255,170,0,.2);background:rgba(255,170,0,.04);margin-bottom:8px;font-family:var(--font-mono);font-size:12px;color:#ffaa00">${i+1}. ${h}</div>`).join('')}
+        </div>` : ''}
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="startLab('${lab.slug}','${lab.title}')">⚡ LABORATORIYANI BOSHLASH</button>
+        <button class="btn btn-o" onclick="goPage('labs')">← Orqaga</button>
+      </div>`;
+  } catch(e) {
+    content.innerHTML = `<div style="color:var(--r);font-family:var(--font-mono);font-size:12px">Xatolik: ${e.message}</div>`;
+  }
+}
+
+async function startLab(slug, title) {
+  if (!requireAuth()) return;
+  state.currentLabSlug = slug;
+  document.getElementById('mls-title').textContent = title;
+  document.getElementById('mls-loading').style.display = '';
+  document.getElementById('mls-session-info').style.display = 'none';
+  document.getElementById('flag-result').textContent = '';
+  openModal('modal-lab-start');
+  try {
+    const session = await api('POST', `/labs/${slug}/start`);
+    state.currentSessionId = session.id;
+    document.getElementById('mls-loading').style.display = 'none';
+    document.getElementById('mls-session-info').style.display = '';
+    document.getElementById('mls-url').textContent = session.access_url;
+    document.getElementById('mls-open-btn').href = session.access_url;
+    document.getElementById('mls-expires').textContent = new Date(session.expires_at).toLocaleTimeString('uz');
+    toast('Laboratoriya tayyor!', 'success');
+  } catch(e) {
+    closeModal('modal-lab-start');
+    toast('Session xatoligi: '+e.message, 'error');
+  }
+}
+
+async function submitFlag() {
+  if (!state.currentLabSlug) return;
+  const flag = document.getElementById('flag-input').value.trim();
+  if (!flag) { toast("Flag kiriting", 'error'); return; }
+  const resEl = document.getElementById('flag-result');
+  resEl.textContent = '⏳ Tekshirilmoqda...';
+  try {
+    const data = await api('POST', `/labs/${state.currentLabSlug}/submit`, {flag});
+    if (data.success) {
+      resEl.style.color = 'var(--g)';
+      resEl.textContent = data.message;
+      toast(data.message, 'success');
+      if (state.user) { state.user.points = data.total_points; localStorage.setItem('mx_user', JSON.stringify(state.user)); }
+    } else {
+      resEl.style.color = 'var(--r)';
+      resEl.textContent = data.message + ' (Urinish: ' + data.attempts + ')';
+    }
+  } catch(e) { resEl.style.color='var(--r)'; resEl.textContent='Xatolik: '+e.message; }
+}
+
+/* ═══════════════════════════════════════════
+   LEADERBOARD
+═══════════════════════════════════════════ */
+async function loadLeaderboard() {
+  const el = document.getElementById('leaderboard-list');
+  el.innerHTML = '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px"><div class="loader"></div></div>';
+  try {
+    const data = await api('GET', '/labs?limit=0', null, false).catch(()=>null);
+    // Leaderboard endpoint yo'q bo'lsa, namuna ko'rsatamiz
+    const sample = [
+      {rank:1,username:'ghost_hacker',points:2840,solved:47},
+      {rank:2,username:'cypher_uz',points:2210,solved:38},
+      {rank:3,username:'null_byte',points:1980,solved:33},
+      {rank:4,username:'matrix_neo',points:1640,solved:28},
+      {rank:5,username:'root_access',points:1290,solved:22},
+    ];
+    el.innerHTML = sample.map(u => {
+      const rankClass = u.rank===1?'gold':u.rank===2?'silver':u.rank===3?'bronze':'other';
+      return `<div class="lb-row">
+        <div class="lb-rank ${rankClass}">${u.rank}</div>
+        <div class="lb-name">${u.username}</div>
+        <div class="lb-solved">${u.solved} lab</div>
+        <div class="lb-pts">${u.points} ball</div>
+      </div>`;
+    }).join('');
+  } catch(e) { el.innerHTML = `<div style="color:var(--r);font-family:var(--font-mono);font-size:12px">Xatolik: ${e.message}</div>`; }
+}
+
+/* ═══════════════════════════════════════════
+   PAYMENT
+═══════════════════════════════════════════ */
+async function startPayment(plan, provider) {
+  if (!requireAuth()) return;
+  try {
+    const data = await api('POST', '/payments/create', {plan, provider});
+    toast('To\'lov sahifasi ochilmoqda...', 'info');
+    window.open(data.payment_url, '_blank');
+    setTimeout(loadPaymentHistory, 2000);
+  } catch(e) { toast('To\'lov xatoligi: '+e.message, 'error'); }
+}
+
+async function loadPaymentHistory() {
+  if (!state.token) return;
+  try {
+    const data = await api('GET', '/payments/history');
+    const tbody = document.getElementById('payment-history');
+    if (!tbody) return;
+    if (data.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:var(--td);font-family:var(--font-mono);font-size:12px">To\'lovlar yo\'q</td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td><span class="tag tag-g">${p.plan.toUpperCase()}</span></td>
+        <td style="color:var(--g)">${(p.amount/100).toLocaleString()} so'm</td>
+        <td>${p.provider}</td>
+        <td><span class="tag ${p.status==='completed'?'tag-g':p.status==='pending'?'tag-y':'tag-r'}">${p.status}</span></td>
+        <td style="color:var(--td);font-size:11px">${new Date(p.created_at).toLocaleDateString('uz')}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+/* ═══════════════════════════════════════════
+   PROFILE
+═══════════════════════════════════════════ */
+async function loadProfile() {
+  if (!state.user) return;
+  try {
+    const user = await api('GET', '/auth/me');
+    state.user = user; localStorage.setItem('mx_user', JSON.stringify(user));
+    document.getElementById('prof-avatar').textContent = user.username[0].toUpperCase();
+    document.getElementById('prof-name').textContent = user.full_name || user.username;
+    document.getElementById('prof-meta').textContent = `${user.email} • ${user.plan.toUpperCase()} • ${user.points} ball`;
+    document.getElementById('edit-name').value = user.full_name || '';
+  } catch(e) {}
+}
+
+async function updateProfile() {
+  const full_name = document.getElementById('edit-name').value;
+  try {
+    await api('PUT', '/auth/me', {full_name});
+    state.user.full_name = full_name; localStorage.setItem('mx_user', JSON.stringify(state.user));
+    toast('Profil yangilandi', 'success'); loadProfile();
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+async function changePassword() {
+  const old_password = document.getElementById('old-pass').value;
+  const new_password = document.getElementById('new-pass').value;
+  if (!old_password || !new_password) { toast("Maydonlarni to'ldiring", 'error'); return; }
+  try {
+    await api('PUT', '/auth/change-password', {old_password, new_password});
+    toast('Parol muvaffaqiyatli o\'zgartirildi', 'success');
+    document.getElementById('old-pass').value = '';
+    document.getElementById('new-pass').value = '';
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+async function loadUserProgress() {
+  const el = document.getElementById('progress-list');
+  el.innerHTML = '<div class="loader"></div>';
+  try {
+    const [prog, labs] = await Promise.all([
+      api('GET', '/labs/me/progress'),
+      api('GET', '/labs?limit=100', null, !!state.token)
+    ]);
+    const labMap = {};
+    labs.items.forEach(l => labMap[l.id] = l);
+    el.innerHTML = prog.length === 0
+      ? '<div style="color:var(--td);font-family:var(--font-mono);font-size:12px">Hali hech qanday lab boshlangani yo\'q</div>'
+      : prog.map(p => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--s1);border:1px solid var(--border);margin-bottom:8px">
+          <div>
+            <div style="font-family:var(--font-head);font-size:13px;color:var(--tw);letter-spacing:.5px">${labMap[p.lab_id]?.title || 'Lab #'+p.lab_id}</div>
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--td);margin-top:3px">${p.attempts} ta urinish • ${p.solved_at ? new Date(p.solved_at).toLocaleDateString('uz') : 'Davom etmoqda'}</div>
+          </div>
+          <div style="text-align:right">
+            ${p.is_solved ? `<span class="tag tag-g">✅ HAL QILINDI</span><div style="font-family:var(--font-mono);font-size:11px;color:var(--g);margin-top:4px">+${p.points_earned} ball</div>` : '<span class="tag tag-y">⏳ JARAYONDA</span>'}
+          </div>
+        </div>`).join('');
+  } catch(e) { el.innerHTML = `<div style="color:var(--r);font-family:var(--font-mono);font-size:12px">Xatolik: ${e.message}</div>`; }
+}
+
+/* ═══════════════════════════════════════════
+   ADMIN
+═══════════════════════════════════════════ */
+function checkAdmin() {
+  if (!state.user || !['admin','superadmin'].includes(state.user.role)) {
+    toast('Admin huquqi talab etiladi', 'error'); goPage('dashboard'); return;
+  }
+}
+
+async function loadAdminStats() {
+  try {
+    const s = await api('GET', '/admin/stats');
+    document.getElementById('a-users').textContent = s.total_users;
+    document.getElementById('a-labs').textContent = s.total_labs;
+    document.getElementById('a-rev').textContent = s.total_revenue.toLocaleString();
+    document.getElementById('a-new').textContent = s.recent_registrations;
+  } catch(e) {}
+}
+
+async function loadAdminUsers() {
+  const search = document.getElementById('user-search')?.value || '';
+  try {
+    const data = await api('GET', `/admin/users?limit=50&search=${search}`);
+    const tbody = document.getElementById('admin-users-tbody');
+    tbody.innerHTML = data.items.map(u => `
+      <tr>
+        <td>${u.id}</td>
+        <td style="color:var(--g)">${u.username}</td>
+        <td style="font-size:11px">${u.email}</td>
+        <td><span class="tag ${u.plan==='free'?'tag-y':'tag-g'}">${u.plan}</span></td>
+        <td style="font-size:11px">${u.role}</td>
+        <td><span class="tag ${u.is_active?'tag-g':'tag-r'}">${u.is_active?'Aktiv':'Bloklangan'}</span></td>
+        <td><button class="btn btn-o btn-sm" onclick="openUserEdit(${u.id},'${u.role}','${u.plan}',${u.is_active})">Tahrirlash</button></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function loadAdminLabs() {
+  try {
+    const data = await api('GET', '/admin/labs?limit=50');
+    const tbody = document.getElementById('admin-labs-tbody');
+    tbody.innerHTML = data.items.map(l => `
+      <tr>
+        <td>${l.id}</td>
+        <td style="color:var(--tw)">${l.title}</td>
+        <td><span class="tag tag-g" style="font-size:10px">${l.category}</span></td>
+        <td><span class="tag ${getDiffClass(l.difficulty)}">${getDiffLabel(l.difficulty)}</span></td>
+        <td>${l.is_premium?'<span class="tag tag-r">PRO</span>':'<span class="tag tag-y">Bepul</span>'}</td>
+        <td style="color:var(--g)">${l.solve_count}</td>
+        <td><button class="btn btn-r btn-sm" onclick="deleteLab(${l.id})">O'chirish</button></td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+async function loadAdminPayments() {
+  try {
+    const data = await api('GET', '/admin/payments?limit=50');
+    const tbody = document.getElementById('admin-payments-tbody');
+    tbody.innerHTML = data.items.map(p => `
+      <tr>
+        <td>${p.id}</td>
+        <td>${p.user_id}</td>
+        <td><span class="tag tag-g">${p.plan}</span></td>
+        <td style="color:var(--g)">${(p.amount/100).toLocaleString()} so'm</td>
+        <td>${p.provider}</td>
+        <td><span class="tag ${p.status==='completed'?'tag-g':p.status==='pending'?'tag-y':'tag-r'}">${p.status}</span></td>
+        <td>${p.status==='pending'?`<button class="btn btn-g btn-sm" onclick="confirmPayment(${p.id})">Tasdiqlash</button>`:'—'}</td>
+      </tr>`).join('');
+  } catch(e) {}
+}
+
+function adminTab(name) {
+  document.querySelectorAll('.admin-tab').forEach((t,i) => t.classList.toggle('active', ['users','labs','payments','create-lab'][i]===name));
+  document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('ap-'+name).classList.add('active');
+}
+
+function openUserEdit(id, role, plan, active) {
+  document.getElementById('edit-uid').value = id;
+  document.getElementById('edit-role').value = role;
+  document.getElementById('edit-plan').value = plan;
+  document.getElementById('edit-active').checked = active;
+  openModal('modal-user-edit');
+}
+
+async function saveUserEdit() {
+  const id = document.getElementById('edit-uid').value;
+  const role = document.getElementById('edit-role').value;
+  const plan = document.getElementById('edit-plan').value;
+  const is_active = document.getElementById('edit-active').checked;
+  try {
+    await api('PUT', `/admin/users/${id}`, {role, plan, is_active});
+    toast('Foydalanuvchi yangilandi', 'success');
+    closeModal('modal-user-edit'); loadAdminUsers();
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+async function deleteLab(id) {
+  if (!confirm('Labni o\'chirishni tasdiqlaysizmi?')) return;
+  try {
+    await api('DELETE', `/admin/labs/${id}`);
+    toast("Lab o'chirildi", 'success'); loadAdminLabs();
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+async function confirmPayment(id) {
+  try {
+    await api('POST', `/admin/payments/${id}/confirm`);
+    toast('To\'lov tasdiqlandi', 'success'); loadAdminPayments();
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+async function createLab() {
+  const body = {
+    title: document.getElementById('cl-title').value,
+    slug: document.getElementById('cl-slug').value,
+    description: document.getElementById('cl-desc').value,
+    category: document.getElementById('cl-cat').value,
+    difficulty: document.getElementById('cl-diff').value,
+    points: parseInt(document.getElementById('cl-points').value)||10,
+    flag: document.getElementById('cl-flag').value,
+    docker_image: document.getElementById('cl-docker').value || null,
+    hints: document.getElementById('cl-hints').value.split(',').map(h=>h.trim()).filter(Boolean),
+    tags: document.getElementById('cl-tags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    is_premium: document.getElementById('cl-premium').checked,
+  };
+  if (!body.title||!body.slug||!body.flag) { toast("Majburiy maydonlarni to'ldiring", 'error'); return; }
+  try {
+    await api('POST', '/admin/labs', body);
+    toast('Lab yaratildi!', 'success'); adminTab('labs'); loadAdminLabs();
+  } catch(e) { toast('Xatolik: '+e.message, 'error'); }
+}
+
+/* ═══════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════ */
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-bg').forEach(m => m.addEventListener('click', e => { if(e.target===m) m.classList.remove('open'); }));
+
+/* ═══════════════════════════════════════════
+   COUNTER ANIMATION
+═══════════════════════════════════════════ */
+function animateCounters() {
+  document.querySelectorAll('[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    let cur = 0; const inc = target/60;
+    const t = setInterval(() => {
+      cur += inc;
+      if (cur >= target) { el.textContent = target + (target===100?'+':''); clearInterval(t); }
+      else el.textContent = Math.floor(cur) + (target===100?'+':'');
+    }, 20);
   });
-}, { threshold: 0.1 });
+}
 
-document.querySelectorAll('.reveal, .stats').forEach(el => observer.observe(el));
+/* ═══════════════════════════════════════════
+   CURSOR
+═══════════════════════════════════════════ */
+const cur = document.getElementById('cur');
+const cur2 = document.getElementById('cur2');
+let mx=0,my=0,tx=0,ty=0;
+document.addEventListener('mousemove', e => {
+  mx=e.clientX; my=e.clientY;
+  cur.style.left=mx-5+'px'; cur.style.top=my-5+'px';
+});
+(function animCur(){tx+=(mx-tx)*.1;ty+=(my-ty)*.1;cur2.style.left=tx-14+'px';cur2.style.top=ty-14+'px';requestAnimationFrame(animCur)})();
+document.querySelectorAll('button,a,.lab-card,.card,.price-card').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{cur.style.transform='scale(2)';cur2.style.transform='scale(1.5)';});
+  el.addEventListener('mouseleave',()=>{cur.style.transform='';cur2.style.transform='';});
+});
 
-// TYPING EFFECT for terminal
-const terminalLines = [
-  { type: 'prompt', text: 'root@matrix:~$ ', cmd: 'nmap -sV 10.0.0.1' },
-  { type: 'out', text: 'Starting Nmap 7.94 ...' },
-  { type: 'out', text: 'PORT     STATE SERVICE VERSION' },
-  { type: 'warn', text: '22/tcp   open  ssh     OpenSSH 7.4' },
-  { type: 'warn', text: '80/tcp   open  http    Apache 2.4.6' },
-  { type: 'err', text: '3306/tcp open  mysql   MySQL 5.6 ⚠' },
-  { type: 'empty', text: '' },
-  { type: 'prompt', text: 'root@matrix:~$ ', cmd: 'sqlmap -u "http://10.0.0.1/login"' },
-  { type: 'out', text: 'Testing connection to target URL...' },
-  { type: 'success', text: '[+] Parameter \'id\' is vulnerable!' },
-  { type: 'success', text: '[+] Database: users_db found' },
-];
+/* ═══════════════════════════════════════════
+   MATRIX RAIN
+═══════════════════════════════════════════ */
+const canvas = document.getElementById('mc');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*(){}[]|アイウエオカキクケコ01';
+const fs = 14; let cols, drops;
+function initMatrix(){ cols=Math.floor(canvas.width/fs); drops=new Array(cols).fill(1); }
+initMatrix(); window.addEventListener('resize', initMatrix);
+setInterval(()=>{
+  ctx.fillStyle='rgba(0,0,0,0.05)'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.font=fs+'px Share Tech Mono';
+  for(let i=0;i<drops.length;i++){
+    const c=chars[Math.floor(Math.random()*chars.length)];
+    const b=Math.random();
+    ctx.fillStyle=b>.96?'#ffffff':b>.7?'#00ff41':'#005f17';
+    ctx.fillText(c,i*fs,drops[i]*fs);
+    if(drops[i]*fs>canvas.height&&Math.random()>.975)drops[i]=0;
+    drops[i]++;
+  }
+}, 45);
+
+/* ═══════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════ */
+window.addEventListener('load', () => {
+  const loader = document.getElementById('page-loader');
+  setTimeout(() => {
+    loader.style.opacity = '0';
+    setTimeout(() => loader.style.display = 'none', 500);
+    updateNav();
+    animateCounters();
+  }, 1200);
+});
 </script>
 </body>
 </html>
